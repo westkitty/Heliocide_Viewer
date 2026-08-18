@@ -3,26 +3,92 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useTimelineStore } from '../../store/timelineStore';
 
-export function InhabitedPlanet() {
-  const planetRef = useRef<THREE.Group>(null);
-  const cloudsRef = useRef<THREE.Mesh>(null);
-  const cityMatRef = useRef<THREE.MeshBasicMaterial>(null);
-  const currentTime = useTimelineStore((s) => s.currentTime);
+const PlanetVertexShader = `
+  varying vec2 vUv;
+  varying vec3 vNormal;
+  varying vec3 vWorldPosition;
+  varying vec3 vWorldNormal;
 
-  // Generate procedural earth-like procedural textures for planet and night city lights
+  void main() {
+    vUv = uv;
+    vNormal = normalize(normalMatrix * normal);
+    vec4 worldPos = modelMatrix * vec4(position, 1.0);
+    vWorldPosition = worldPos.xyz;
+    vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
+    gl_Position = projectionMatrix * viewMatrix * worldPos;
+  }
+`;
+
+const PlanetFragmentShader = `
+  uniform sampler2D uSurfaceMap;
+  uniform sampler2D uNightMap;
+  uniform sampler2D uCloudMap;
+  uniform vec3 uStarPosition;
+  uniform float uCurrentTime;
+  uniform float uCityBlackout;
+
+  varying vec2 vUv;
+  varying vec3 vNormal;
+  varying vec3 vWorldPosition;
+  varying vec3 vWorldNormal;
+
+  void main() {
+    vec3 normal = normalize(vWorldNormal);
+    vec3 sunDir = normalize(uStarPosition - vWorldPosition);
+    vec3 viewDir = normalize(cameraPosition - vWorldPosition);
+
+    // Exact solar incidence angle (Terminator)
+    float NdotL = dot(normal, sunDir);
+    float dayFactor = smoothstep(-0.15, 0.25, NdotL);
+    float nightFactor = 1.0 - dayFactor;
+
+    // Sample textures
+    vec4 surface = texture2D(uSurfaceMap, vUv);
+    vec4 night = texture2D(uNightMap, vUv);
+    vec4 clouds = texture2D(uCloudMap, vUv);
+
+    // Ocean Specular Glint on Sunward side (ocean is deep blue surface.b > 0.35)
+    float isOcean = smoothstep(0.18, 0.35, surface.b - surface.g);
+    vec3 halfVec = normalize(sunDir + viewDir);
+    float NdotH = max(0.0, dot(normal, halfVec));
+    float specular = pow(NdotH, 64.0) * isOcean * dayFactor * 1.8;
+
+    // Direct warm solar illumination (5800K)
+    vec3 sunColor = vec3(1.0, 0.95, 0.88);
+    vec3 ambientSpace = vec3(0.015, 0.02, 0.035);
+
+    vec3 daySurface = mix(surface.rgb, clouds.rgb, clouds.a * 0.75);
+    vec3 dayLit = daySurface * (max(0.0, NdotL) * sunColor + ambientSpace) + vec3(specular);
+
+    // Night hemisphere: City lights only illuminate in true night, blacking out during collapse
+    vec3 nightLit = night.rgb * (1.0 - uCityBlackout) * nightFactor * 2.2 + ambientSpace * 0.5;
+
+    // Atmospheric Rayleigh scattering rim on illuminated limb
+    float rim = 1.0 - max(0.0, dot(normal, viewDir));
+    vec3 atmosGlow = vec3(0.22, 0.55, 0.95) * pow(rim, 3.5) * (dayFactor * 1.5 + 0.15);
+
+    vec3 finalColor = mix(nightLit, dayLit, dayFactor) + atmosGlow;
+
+    gl_FragColor = vec4(finalColor, 1.0);
+  }
+`;
+
+export function InhabitedPlanet() {
+  const planetGroupRef = useRef<THREE.Group>(null);
+  const materialRef = useRef<THREE.ShaderMaterial>(null);
+
   const { planetTexture, nightTexture, cloudTexture } = useMemo(() => {
-    // Planet surface canvas
+    // Surface texture canvas
     const pCanvas = document.createElement('canvas');
     pCanvas.width = 1024;
     pCanvas.height = 512;
     const pCtx = pCanvas.getContext('2d')!;
     
-    // Ocean base
-    pCtx.fillStyle = '#0f2744';
+    pCtx.fillStyle = '#0a2239';
     pCtx.fillRect(0, 0, 1024, 512);
 
-    // Procedural continent landmasses
-    pCtx.fillStyle = '#1e4d2b';
+    // Continents
+    pCtx.fillStyle = '#1e5128';
     for (let i = 0; i < 40; i++) {
       const cx = (i * 27) % 1024;
       const cy = 100 + (i * 37) % 312;
@@ -30,13 +96,12 @@ export function InhabitedPlanet() {
       pCtx.beginPath();
       pCtx.arc(cx, cy, r, 0, Math.PI * 2);
       pCtx.fill();
-      // Sub-blobs
       pCtx.beginPath();
       pCtx.arc(cx + r * 0.5, cy + r * 0.3, r * 0.6, 0, Math.PI * 2);
       pCtx.fill();
     }
     // High-altitude mountain ridges
-    pCtx.fillStyle = '#6b7280';
+    pCtx.fillStyle = '#5c6370';
     for (let i = 0; i < 20; i++) {
       const cx = (i * 53 + 120) % 1024;
       const cy = 140 + (i * 29) % 230;
@@ -45,38 +110,38 @@ export function InhabitedPlanet() {
       pCtx.fill();
     }
 
-    // Night city lights canvas
+    // Night city lights
     const nCanvas = document.createElement('canvas');
     nCanvas.width = 1024;
     nCanvas.height = 512;
     const nCtx = nCanvas.getContext('2d')!;
     nCtx.fillStyle = '#000000';
     nCtx.fillRect(0, 0, 1024, 512);
-    nCtx.fillStyle = '#ffd166';
-    for (let i = 0; i < 600; i++) {
+    nCtx.fillStyle = '#ffcf70';
+    for (let i = 0; i < 700; i++) {
       const x = Math.floor((Math.sin(i * 99) * 0.5 + 0.5) * 1024);
       const y = Math.floor((Math.cos(i * 77) * 0.35 + 0.5) * 512);
       nCtx.fillRect(x, y, 2, 2);
-      if (i % 5 === 0) {
+      if (i % 4 === 0) {
         nCtx.fillStyle = '#06d6a0';
         nCtx.fillRect(x, y, 3, 3);
-        nCtx.fillStyle = '#ffd166';
+        nCtx.fillStyle = '#ffcf70';
       }
     }
 
-    // Clouds canvas
+    // Cloud cover canvas
     const cCanvas = document.createElement('canvas');
     cCanvas.width = 1024;
     cCanvas.height = 512;
     const cCtx = cCanvas.getContext('2d')!;
     cCtx.fillStyle = 'rgba(0,0,0,0)';
     cCtx.fillRect(0, 0, 1024, 512);
-    cCtx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-    for (let i = 0; i < 70; i++) {
+    cCtx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    for (let i = 0; i < 90; i++) {
       const cx = (i * 43) % 1024;
       const cy = (i * 23) % 512;
       cCtx.beginPath();
-      cCtx.ellipse(cx, cy, 60, 20, 0.2, 0, Math.PI * 2);
+      cCtx.ellipse(cx, cy, 55, 18, 0.25, 0, Math.PI * 2);
       cCtx.fill();
     }
 
@@ -86,86 +151,57 @@ export function InhabitedPlanet() {
     return { planetTexture: pTex, nightTexture: nTex, cloudTexture: cTex };
   }, []);
 
+  const uniforms = useMemo(() => ({
+    uSurfaceMap: { value: planetTexture },
+    uNightMap: { value: nightTexture },
+    uCloudMap: { value: cloudTexture },
+    uStarPosition: { value: new THREE.Vector3(0, 0, -180) },
+    uCurrentTime: { value: 0 },
+    uCityBlackout: { value: 0 }
+  }), [planetTexture, nightTexture, cloudTexture]);
+
   useFrame((_, delta) => {
-    if (!planetRef.current) return;
+    if (!planetGroupRef.current || !materialRef.current) return;
 
-    // Slow orbital rotation
-    planetRef.current.rotation.y += delta * 0.02;
+    planetGroupRef.current.rotation.y += delta * 0.015;
 
-    if (cloudsRef.current) {
-      cloudsRef.current.rotation.y += delta * 0.028;
+    const currentTime = useTimelineStore.getState().currentTime;
+    materialRef.current.uniforms.uCurrentTime.value = currentTime;
+
+    // City lights blackout calculation
+    let blackout = 0;
+    if (currentTime < 52.0) {
+      blackout = 0;
+    } else if (currentTime < 78.0) {
+      const t = (currentTime - 52.0) / 26.0;
+      const flicker = Math.sin(currentTime * 25.0) > 0 ? 0.3 : 0.9;
+      blackout = Math.min(1.0, t * flicker + t * 0.5);
+    } else {
+      blackout = 1.0;
     }
+    materialRef.current.uniforms.uCityBlackout.value = blackout;
 
-    // Night city lights blackout during collapse
-    if (cityMatRef.current) {
-      if (currentTime < 52.0) {
-        cityMatRef.current.opacity = 0.85;
-      } else if (currentTime < 78.0) {
-        const t = (currentTime - 52.0) / 26.0;
-        // Flickering failure
-        const flicker = Math.sin(currentTime * 25.0) > 0 ? 0.3 : 0.8;
-        cityMatRef.current.opacity = Math.max(0, (1.0 - t) * flicker);
-      } else {
-        cityMatRef.current.opacity = 0.0;
-      }
-    }
-
-    // Gravitational orbital decay tilt during Phase E & F
+    // Orbital decay during catastrophe
     if (currentTime > 78.0) {
       const decay = Math.min(1.0, (currentTime - 78.0) / 40.0);
-      planetRef.current.position.y = -25 - decay * 15;
-      planetRef.current.rotation.z = decay * 0.4;
+      planetGroupRef.current.position.y = -25 - decay * 15;
+      planetGroupRef.current.rotation.z = decay * 0.4;
     } else {
-      planetRef.current.position.y = -25;
-      planetRef.current.rotation.z = 0.05;
+      planetGroupRef.current.position.y = -25;
+      planetGroupRef.current.rotation.z = 0.05;
     }
   });
 
   return (
-    <group ref={planetRef} position={[65, -25, -120]}>
-      {/* Surface Mesh */}
+    <group ref={planetGroupRef} position={[65, -25, -120]}>
+      {/* Complete Physically-Shaded Inhabited Planet with Exact Solar Direction */}
       <mesh>
         <sphereGeometry args={[24, 64, 64]} />
-        <meshStandardMaterial
-          map={planetTexture}
-          roughness={0.7}
-          metalness={0.1}
-        />
-      </mesh>
-
-      {/* Night City Lights (Emissive overlay) */}
-      <mesh>
-        <sphereGeometry args={[24.05, 64, 64]} />
-        <meshBasicMaterial
-          ref={cityMatRef}
-          map={nightTexture}
-          transparent
-          opacity={0.85}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-        />
-      </mesh>
-
-      {/* Cloud Layer */}
-      <mesh ref={cloudsRef}>
-        <sphereGeometry args={[24.25, 48, 48]} />
-        <meshStandardMaterial
-          map={cloudTexture}
-          transparent
-          opacity={0.55}
-          depthWrite={false}
-        />
-      </mesh>
-
-      {/* Atmospheric Rim Glow */}
-      <mesh scale={1.05}>
-        <sphereGeometry args={[24, 32, 32]} />
-        <meshBasicMaterial
-          color="#38bdf8"
-          transparent
-          opacity={0.2}
-          side={THREE.BackSide}
-          blending={THREE.AdditiveBlending}
+        <shaderMaterial
+          ref={materialRef}
+          vertexShader={PlanetVertexShader}
+          fragmentShader={PlanetFragmentShader}
+          uniforms={uniforms}
         />
       </mesh>
     </group>
