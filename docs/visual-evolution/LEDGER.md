@@ -13,7 +13,7 @@
 |---|---|---|---|---|---|---|
 | **01** | Cinematic Color Management Foundation | Pending | A_NORMAL | ACCEPTED | 18 -> 31 | Linear sRGB, ACESFilmic tone mapping, warm solar illumination & physical exposure balance |
 | **02** | Deterministic Astronomical Star Distribution | Pending | A_NORMAL | ACCEPTED | 23 -> 33 | Seeded stellar generator with B-V color temperatures & realistic density gradients |
-| **03** | High-Quality Stellar Sprite Shader | Pending | A_NORMAL | Queued | - | Subpixel luminous cores, diffraction spikes, and apparent magnitude scaling |
+| **03** | High-Quality Stellar Sprite Shader | Pending | A_NORMAL | ACCEPTED | 26 -> 33 | Subpixel luminous cores, diffraction spikes, and apparent magnitude scaling |
 | **04** | Galactic Structure / Deep-Sky Background | Pending | A_NORMAL | Queued | - | Subtle galactic dust lanes and large-scale background structure |
 | **05** | Starfield Anti-Aliasing and Stability | Pending | A_NORMAL | Queued | - | Anti-aliased subpixel point integration without atmospheric twinkle |
 | **06** | Starfield / Exposure Integration | Pending | A_NORMAL / D_COLLAPSE | Queued | - | Dynamic stellar brightness suppression during peak solar and accretion emission |

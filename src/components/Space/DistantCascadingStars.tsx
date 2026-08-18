@@ -3,9 +3,9 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useTimelineStore } from '../../store/timelineStore';
 
-const TOTAL_STARS = 4500;
+const TOTAL_STARS = 5000;
 
-// Deterministic Linear Congruential PRNG
+// Deterministic PRNG
 function createSeededRNG(seed = 17618934) {
   let s = seed;
   return () => {
@@ -16,19 +16,80 @@ function createSeededRNG(seed = 17618934) {
 
 // Astronomical Harvard spectral types and B-V color temperatures
 const SPECTRAL_CLASSES = [
-  { weight: 0.04, color: new THREE.Color('#9bb0ff'), name: 'O/B Blue Giant' },
-  { weight: 0.14, color: new THREE.Color('#cad7ff'), name: 'A White' },
-  { weight: 0.20, color: new THREE.Color('#f8f9ff'), name: 'F Yellow-White' },
-  { weight: 0.30, color: new THREE.Color('#fff4e8'), name: 'G Solar Yellow' },
-  { weight: 0.22, color: new THREE.Color('#ffd2a1'), name: 'K Orange' },
-  { weight: 0.10, color: new THREE.Color('#ffb380'), name: 'M Red Dwarf' }
+  { weight: 0.04, color: new THREE.Color('#9bb0ff') }, // O/B Blue Giant
+  { weight: 0.14, color: new THREE.Color('#cad7ff') }, // A White
+  { weight: 0.20, color: new THREE.Color('#f8f9ff') }, // F Yellow-White
+  { weight: 0.30, color: new THREE.Color('#fff4e8') }, // G Solar Yellow
+  { weight: 0.22, color: new THREE.Color('#ffd2a1') }, // K Orange
+  { weight: 0.10, color: new THREE.Color('#ffb380') }  // M Red Dwarf
 ];
 
-export function DistantCascadingStars() {
-  const pointsRef = useRef<THREE.Points>(null);
+const StarVertexShader = `
+  attribute vec3 aColor;
+  attribute float aSize;
+  attribute float aExtinction;
 
-  // Deterministically generate astronomical starfield with galactic structure and realistic magnitudes
-  const { positions, baseColors, sizes, extinctionTimes } = useMemo(() => {
+  uniform float uCurrentTime;
+
+  varying vec3 vColor;
+  varying float vSize;
+  varying float vAlpha;
+
+  void main() {
+    vColor = aColor;
+    vSize = aSize;
+
+    // Extinction factor
+    float alpha = 1.0;
+    if (aExtinction < 9000.0 && uCurrentTime >= aExtinction) {
+      alpha = max(0.0, 1.0 - (uCurrentTime - aExtinction) / 3.0);
+    }
+    vAlpha = alpha;
+
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    gl_Position = projectionMatrix * mvPosition;
+
+    // Perspective point sizing with subpixel clamp
+    gl_PointSize = max(1.5, aSize * (900.0 / -mvPosition.z));
+  }
+`;
+
+const StarFragmentShader = `
+  varying vec3 vColor;
+  varying float vSize;
+  varying float vAlpha;
+
+  void main() {
+    if (vAlpha <= 0.001) discard;
+
+    vec2 coord = gl_PointCoord - vec2(0.5);
+    float dist = length(coord) * 2.0;
+    if (dist > 1.0) discard;
+
+    // Gaussian core + optical halo profile
+    float core = exp(-dist * dist * 9.0);
+    float halo = exp(-dist * 3.2) * 0.45;
+    float profile = core + halo;
+
+    // Restrained 4-point diffraction spike on prominent stars
+    float spike = 0.0;
+    if (vSize > 3.0) {
+      float hSpike = max(0.0, 1.0 - abs(coord.y) * 16.0) * max(0.0, 1.0 - abs(coord.x) * 2.5);
+      float vSpike = max(0.0, 1.0 - abs(coord.x) * 16.0) * max(0.0, 1.0 - abs(coord.y) * 2.5);
+      spike = (hSpike + vSpike) * 0.35 * (vSize / 5.0);
+    }
+
+    vec3 finalColor = vColor * (profile + spike);
+    float finalAlpha = smoothstep(1.0, 0.8, dist) * vAlpha * (profile + spike * 0.8);
+
+    gl_FragColor = vec4(finalColor, clamp(finalAlpha, 0.0, 1.0));
+  }
+`;
+
+export function DistantCascadingStars() {
+  const materialRef = useRef<THREE.ShaderMaterial>(null);
+
+  const { positions, colors, sizes, extinctionTimes } = useMemo(() => {
     const rng = createSeededRNG(987654321);
 
     const pos = new Float32Array(TOTAL_STARS * 3);
@@ -37,19 +98,14 @@ export function DistantCascadingStars() {
     const ext = new Float32Array(TOTAL_STARS);
 
     for (let i = 0; i < TOTAL_STARS; i++) {
-      // Celestial sphere radius (700 to 1100 units)
-      const radius = 700 + rng() * 400;
+      const radius = 750 + rng() * 450;
 
-      // Astronomical galactic coordinate concentration:
-      // Galactic plane angle ~ 25 degrees tilt
       let galacticLat = (rng() - 0.5) * Math.PI;
-      // Weight distribution toward galactic plane (concentrated in mid-latitudes)
       if (rng() < 0.65) {
         galacticLat = Math.pow(rng() - 0.5, 3) * Math.PI * 1.8;
       }
       const galacticLon = rng() * Math.PI * 2;
 
-      // Transform galactic coordinates to cartesian sphere
       const x = radius * Math.cos(galacticLat) * Math.cos(galacticLon);
       const y = radius * Math.sin(galacticLat);
       const z = radius * Math.cos(galacticLat) * Math.sin(galacticLon);
@@ -58,12 +114,12 @@ export function DistantCascadingStars() {
       pos[i * 3 + 1] = y;
       pos[i * 3 + 2] = z;
 
-      // Apparent magnitude distribution (power law: vast majority are faint sub-pixels, rare bright heroes)
+      // Apparent magnitude distribution
       const magRoll = rng();
-      const magnitude = Math.pow(magRoll, 3.2); // 0 (faint) to 1 (bright)
-      sz[i] = THREE.MathUtils.lerp(1.2, 4.5, magnitude);
+      const magnitude = Math.pow(magRoll, 3.4);
+      sz[i] = THREE.MathUtils.lerp(1.5, 5.2, magnitude);
 
-      // Select spectral class based on cumulative probability
+      // Spectral class
       let specClass = SPECTRAL_CLASSES[3];
       const roll = rng();
       let cumWeight = 0;
@@ -75,13 +131,12 @@ export function DistantCascadingStars() {
         }
       }
 
-      // Modulate color intensity by apparent magnitude
-      const intensity = THREE.MathUtils.lerp(0.45, 1.25, magnitude);
+      const intensity = THREE.MathUtils.lerp(0.5, 1.6, magnitude);
       col[i * 3] = specClass.color.r * intensity;
       col[i * 3 + 1] = specClass.color.g * intensity;
       col[i * 3 + 2] = specClass.color.b * intensity;
 
-      // Extinction zone for the Siege Wall swath (sector theta between 0.2 and 2.4 radians)
+      // Extinction sector for Siege Wall
       const theta = Math.atan2(z, x);
       const isInSiegeSector = theta > 0.15 && theta < 2.45 && Math.abs(y) < 420;
 
@@ -95,70 +150,47 @@ export function DistantCascadingStars() {
 
     return {
       positions: pos,
-      baseColors: col,
+      colors: col,
       sizes: sz,
       extinctionTimes: ext
     };
   }, []);
 
-  const dynamicColors = useMemo(() => new Float32Array(baseColors), [baseColors]);
+  const uniforms = useMemo(() => ({
+    uCurrentTime: { value: 0 }
+  }), []);
 
   useFrame(() => {
-    if (!pointsRef.current) return;
-    const geometry = pointsRef.current.geometry;
-    const colorAttr = geometry.attributes.color;
-    if (!colorAttr) return;
-
-    const currentTime = useTimelineStore.getState().currentTime;
-    let needsUpdate = false;
-
-    for (let i = 0; i < TOTAL_STARS; i++) {
-      const extTime = extinctionTimes[i];
-      if (extTime >= 9999.0) continue;
-
-      if (currentTime >= extTime) {
-        // Star has collapsed/extinguished into the Siege Wall void
-        const fadeProgress = Math.min(1.0, (currentTime - extTime) / 3.0);
-        const factor = 1.0 - fadeProgress;
-
-        dynamicColors[i * 3] = baseColors[i * 3] * factor;
-        dynamicColors[i * 3 + 1] = baseColors[i * 3 + 1] * factor;
-        dynamicColors[i * 3 + 2] = baseColors[i * 3 + 2] * factor;
-        needsUpdate = true;
-      } else {
-        dynamicColors[i * 3] = baseColors[i * 3];
-        dynamicColors[i * 3 + 1] = baseColors[i * 3 + 1];
-        dynamicColors[i * 3 + 2] = baseColors[i * 3 + 2];
-      }
-    }
-
-    if (needsUpdate) {
-      colorAttr.needsUpdate = true;
-    }
+    if (!materialRef.current) return;
+    materialRef.current.uniforms.uCurrentTime.value = useTimelineStore.getState().currentTime;
   });
 
   return (
-    <points ref={pointsRef}>
+    <points>
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
           args={[positions, 3]}
         />
         <bufferAttribute
-          attach="attributes-color"
-          args={[dynamicColors, 3]}
+          attach="attributes-aColor"
+          args={[colors, 3]}
         />
         <bufferAttribute
-          attach="attributes-size"
+          attach="attributes-aSize"
           args={[sizes, 1]}
         />
+        <bufferAttribute
+          attach="attributes-aExtinction"
+          args={[extinctionTimes, 1]}
+        />
       </bufferGeometry>
-      <pointsMaterial
-        size={2.2}
-        vertexColors
+      <shaderMaterial
+        ref={materialRef}
+        vertexShader={StarVertexShader}
+        fragmentShader={StarFragmentShader}
+        uniforms={uniforms}
         transparent
-        opacity={0.95}
-        sizeAttenuation={false}
         depthWrite={false}
         blending={THREE.AdditiveBlending}
       />
