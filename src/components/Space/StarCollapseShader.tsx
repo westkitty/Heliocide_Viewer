@@ -100,11 +100,9 @@ const StarFragmentShader = `
     float granules = solarGranulation(vPosition * 0.5, uTime * convSpeed);
     float macroFlow = snoise(vPosition * 0.2 + vec3(0.0, uTime * convSpeed * 0.4, 0.0)) * 0.5 + 0.5;
 
-    // Physical Eddington solar limb darkening
     float mu = NdotV;
     float eddingtonLimb = clamp(1.0 - 0.65 * (1.0 - mu) - 0.25 * (1.0 - sqrt(max(0.0, mu))), 0.15, 1.0);
 
-    // Normal solar colors (5800K)
     vec3 deepCore = vec3(1.0, 0.98, 0.92);
     vec3 cellGold = vec3(1.0, 0.76, 0.24);
     vec3 laneAmber = vec3(0.85, 0.42, 0.08);
@@ -114,11 +112,9 @@ const StarFragmentShader = `
 
     vec3 surgeColor = vec3(0.75, 0.88, 1.0) * (2.5 + granules * 1.5);
 
-    // Relativistic Doppler beaming on accretion boundary
     float dopplerBeam = 1.0 + normal.x * 0.65;
     vec3 accretionColor = vec3(0.0, 0.85, 1.0) * pow(rim, 2.2) * 4.2 * dopplerBeam;
 
-    // Multi-tier General Relativistic Photon Ring Structure (n=1 primary and n=2 secondary sub-rings)
     float n1_ring = exp(-pow((rim - 0.885) / 0.015, 2.0)) * 7.5;
     float n2_subring = exp(-pow((rim - 0.865) / 0.0035, 2.0)) * 12.0;
     float photonTotal = n1_ring + n2_subring;
@@ -328,13 +324,15 @@ export function StarCollapseShader() {
 
   return (
     <group position={[0, 0, -180]}>
-      {/* Central Star Core / Event Horizon Shadow with Nested Photon Sub-Rings */}
+      {/* Central Star Core / Event Horizon Shadow with Depth-Writing Occlusion */}
       <mesh ref={meshRef}>
         <sphereGeometry args={[18, 64, 64]} />
         <shaderMaterial
           vertexShader={StarVertexShader}
           fragmentShader={StarFragmentShader}
           uniforms={starUniforms}
+          depthWrite={true}
+          depthTest={true}
         />
       </mesh>
 
