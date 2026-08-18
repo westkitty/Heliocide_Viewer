@@ -100,9 +100,11 @@ const StarFragmentShader = `
     float granules = solarGranulation(vPosition * 0.5, uTime * convSpeed);
     float macroFlow = snoise(vPosition * 0.2 + vec3(0.0, uTime * convSpeed * 0.4, 0.0)) * 0.5 + 0.5;
 
+    // Physical Eddington solar limb darkening
     float mu = NdotV;
     float eddingtonLimb = clamp(1.0 - 0.65 * (1.0 - mu) - 0.25 * (1.0 - sqrt(max(0.0, mu))), 0.15, 1.0);
 
+    // Normal solar colors (5800K)
     vec3 deepCore = vec3(1.0, 0.98, 0.92);
     vec3 cellGold = vec3(1.0, 0.76, 0.24);
     vec3 laneAmber = vec3(0.85, 0.42, 0.08);
@@ -112,13 +114,9 @@ const StarFragmentShader = `
 
     vec3 surgeColor = vec3(0.75, 0.88, 1.0) * (2.5 + granules * 1.5);
 
-    // Relativistic accretion disc emission with ISCO temperature gradient
-    vec3 iscoHot = vec3(0.92, 0.96, 1.0);
-    vec3 midDisc = vec3(0.0, 0.85, 1.0);
-    vec3 outerCool = vec3(0.05, 0.35, 0.85);
-
-    float dopplerBeam = 1.0 + normal.x * 0.55;
-    vec3 accretionColor = mix(midDisc, iscoHot, pow(rim, 4.0)) * pow(rim, 2.2) * 4.2 * dopplerBeam;
+    // Relativistic Doppler beaming on accretion boundary
+    float dopplerBeam = 1.0 + normal.x * 0.65;
+    vec3 accretionColor = vec3(0.0, 0.85, 1.0) * pow(rim, 2.2) * 4.2 * dopplerBeam;
 
     // Razor-sharp photon ring
     float photonRing = smoothstep(0.85, 0.94, rim) * (1.0 - smoothstep(0.94, 0.98, rim)) * 8.5;
@@ -223,33 +221,41 @@ const AccretionFragmentShader = `
 
     float angle = atan(centered.y, centered.x);
 
-    // Keplerian differential rotation: inner orbits faster than outer
+    // Keplerian orbital velocity (v ~ r^-0.5)
+    float normDist = (dist - 0.28) / 0.72;
     float keplerOmega = pow(max(0.1, dist), -1.5) * 1.8;
     float rotAngle = angle + uTime * keplerOmega * (0.3 + uCollapseProgress * 0.7);
+
+    // Relativistic Doppler Beaming Factor
+    // Gas orbital velocity beta reaches 0.45c near inner edge
+    float beta = mix(0.48, 0.15, normDist);
+    float gamma = 1.0 / sqrt(max(0.01, 1.0 - beta * beta));
+    // Approaching side (centered.x < 0) vs Receding side (centered.x > 0)
+    float vDotView = -sin(angle); 
+    float dopplerFactor = 1.0 / (gamma * (1.0 - beta * vDotView));
+    float beamingIntensity = pow(dopplerFactor, 3.8);
 
     // Spiraling relativistic infall arms & viscous turbulence
     float spiral1 = snoise(vec3(cos(rotAngle * 3.0) * dist * 3.0, sin(rotAngle * 3.0) * dist * 3.0, dist * 2.0));
     float spiral2 = snoise(vec3(cos(rotAngle * 8.0) * dist * 6.0, sin(rotAngle * 8.0) * dist * 6.0, uTime * 0.4));
     float turbulence = 0.6 + spiral1 * 0.25 + spiral2 * 0.15;
 
-    // Temperature radial gradient: Inner ISCO (>80,000K) -> Mid (cyan) -> Outer cool (deep blue)
+    // Relativistic Doppler color shift (blue-boosted on approaching, red-dimmed on receding)
     vec3 iscoWhite = vec3(0.95, 0.98, 1.0);
     vec3 midCyan = vec3(0.0, 0.88, 1.0);
     vec3 outerBlue = vec3(0.05, 0.25, 0.75);
+    vec3 recedingRedShift = vec3(0.35, 0.12, 0.45);
 
-    float normDist = (dist - 0.28) / 0.72;
     vec3 discTempColor = mix(iscoWhite, midCyan, smoothstep(0.0, 0.45, normDist));
     discTempColor = mix(discTempColor, outerBlue, smoothstep(0.45, 1.0, normDist));
+    discTempColor = mix(recedingRedShift, discTempColor, smoothstep(0.6, 1.2, dopplerFactor));
 
-    // Relativistic Doppler beaming across disk orientation
-    float doppler = 1.0 + centered.x * 0.65;
-    vec3 discEmission = discTempColor * turbulence * (1.0 - smoothstep(0.7, 1.0, dist)) * 3.8 * doppler;
+    vec3 discEmission = discTempColor * turbulence * (1.0 - smoothstep(0.7, 1.0, dist)) * 2.4 * beamingIntensity;
 
-    // Normal solar corona mode (progress < 0.35) vs Relativistic Accretion Disc (progress >= 0.35)
     vec3 normalCorona = vec3(1.0, 0.78, 0.32) * (1.0 - dist) * 2.0;
     vec3 finalColor = mix(normalCorona, discEmission, uCollapseProgress);
 
-    float alpha = clamp((1.0 - smoothstep(0.65, 1.0, dist)) * turbulence * (0.7 + uCollapseProgress * 0.3), 0.0, 1.0);
+    float alpha = clamp((1.0 - smoothstep(0.65, 1.0, dist)) * turbulence * (0.6 + uCollapseProgress * 0.4) * min(2.0, beamingIntensity), 0.0, 1.0);
     gl_FragColor = vec4(finalColor, alpha);
   }
 `;
@@ -335,7 +341,7 @@ export function StarCollapseShader() {
         />
       </mesh>
 
-      {/* Relativistic Accretion Infall Disc */}
+      {/* Relativistic Accretion Infall Disc with Doppler Beaming */}
       <mesh ref={diskRef} rotation={[-0.3, 0.2, 0]}>
         <planeGeometry args={[84, 84]} />
         <shaderMaterial
