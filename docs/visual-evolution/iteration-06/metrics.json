@@ -1,0 +1,18 @@
+{
+  "iteration": "06",
+  "name": "Starfield / Exposure Integration",
+  "checkpoint": "D_COLLAPSE",
+  "time": 65.0,
+  "scores": {
+    "realism": {"before": 3, "after": 5},
+    "materialSurface": {"before": 4, "after": 4},
+    "lightingFidelity": {"before": 3, "after": 5},
+    "scaleMass": {"before": 3, "after": 4},
+    "compositionReadability": {"before": 3, "after": 4},
+    "canonFidelity": {"before": 5, "after": 5},
+    "visualRichness": {"before": 3, "after": 5},
+    "technicalPolish": {"before": 3, "after": 5}
+  },
+  "totalScore": {"before": 27, "after": 37},
+  "verdict": "ACCEPTED"
+}

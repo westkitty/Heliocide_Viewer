@@ -30,6 +30,7 @@ const StarVertexShader = `
   attribute float aExtinction;
 
   uniform float uCurrentTime;
+  uniform float uExposure;
 
   varying vec3 vColor;
   varying float vSize;
@@ -48,15 +49,15 @@ const StarVertexShader = `
     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
     gl_Position = projectionMatrix * mvPosition;
 
-    // Projected physical size on sensor
-    float projSize = aSize * (900.0 / -mvPosition.z);
+    // Projected physical size on sensor modulated by exposure
+    float projSize = aSize * (900.0 / -mvPosition.z) * sqrt(uExposure);
 
-    // Subpixel energy conservation: clamp point size to prevent pixel dropouts, scale alpha proportionally
+    // Dynamic exposure adaptation for starfield visibility
     if (projSize < 1.2) {
-      vAlpha = alpha * clamp(projSize / 1.2, 0.25, 1.0);
+      vAlpha = alpha * clamp(projSize / 1.2, 0.2, 1.0) * uExposure;
       gl_PointSize = 1.2;
     } else {
-      vAlpha = alpha;
+      vAlpha = alpha * uExposure;
       gl_PointSize = projSize;
     }
   }
@@ -74,11 +75,11 @@ const StarFragmentShader = `
     float dist = length(coord) * 2.0;
     if (dist > 1.0) discard;
 
-    // Analytic derivative anti-aliasing for temporal stability
+    // Analytic derivative anti-aliasing
     float delta = fwidth(dist);
     float edgeAA = 1.0 - smoothstep(1.0 - max(delta * 1.5, 0.08), 1.0, dist);
 
-    // Stable Gaussian core + optical halo profile
+    // Gaussian core + optical halo profile
     float core = exp(-dist * dist * 10.0);
     float halo = exp(-dist * 3.5) * 0.4;
     float profile = core + halo;
@@ -166,12 +167,33 @@ export function DistantCascadingStars() {
   }, []);
 
   const uniforms = useMemo(() => ({
-    uCurrentTime: { value: 0 }
+    uCurrentTime: { value: 0 },
+    uExposure: { value: 1.0 }
   }), []);
 
   useFrame(() => {
     if (!materialRef.current) return;
-    materialRef.current.uniforms.uCurrentTime.value = useTimelineStore.getState().currentTime;
+    const currentTime = useTimelineStore.getState().currentTime;
+    materialRef.current.uniforms.uCurrentTime.value = currentTime;
+
+    // Optical exposure integration:
+    // Normal solar state: bright sun suppresses faint stars (exposure = 0.8)
+    // Collapse flash (52s - 58s): blinding solar collapse suppresses stars heavily (exposure = 0.25)
+    // Post-collapse singularity (58s - 78s): dark void allows camera/eye to reveal faint stars (exposure = 1.35)
+    let exposure = 0.8;
+    if (currentTime < 52.0) {
+      exposure = 0.8;
+    } else if (currentTime >= 52.0 && currentTime < 58.0) {
+      const flash = (currentTime - 52.0) / 6.0;
+      exposure = THREE.MathUtils.lerp(0.8, 0.25, Math.sin(flash * Math.PI));
+    } else if (currentTime >= 58.0 && currentTime < 78.0) {
+      const t = (currentTime - 58.0) / 20.0;
+      exposure = THREE.MathUtils.lerp(0.5, 1.35, t);
+    } else {
+      exposure = 1.35;
+    }
+
+    materialRef.current.uniforms.uExposure.value = exposure;
   });
 
   return (

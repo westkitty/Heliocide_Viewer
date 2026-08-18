@@ -16,7 +16,7 @@
 | **03** | High-Quality Stellar Sprite Shader | Pending | A_NORMAL | ACCEPTED | 26 -> 33 | Subpixel luminous cores, diffraction spikes, and apparent magnitude scaling |
 | **04** | Galactic Structure / Deep-Sky Background | Pending | A_NORMAL | ACCEPTED | 26 -> 34 | Subtle galactic dust lanes and large-scale background structure |
 | **05** | Starfield Anti-Aliasing and Stability | Pending | A_NORMAL | ACCEPTED | 31 -> 35 | Anti-aliased subpixel point integration without atmospheric twinkle |
-| **06** | Starfield / Exposure Integration | Pending | A_NORMAL / D_COLLAPSE | Queued | - | Dynamic stellar brightness suppression during peak solar and accretion emission |
+| **06** | Starfield / Exposure Integration | Pending | A_NORMAL / D_COLLAPSE | ACCEPTED | 27 -> 37 | Dynamic stellar brightness suppression during peak solar and accretion emission |
 | **07** | Replace Physical Siege-Wall Dodecahedron | Pending | F_SIEGE_WALL | Queued | - | Replace geometric dodecahedron with sky-space angular extinction mask |
 | **08** | Organic Siege-Wall Propagation Front | Pending | F_SIEGE_WALL | Queued | - | Layered multi-scale causal boundary erasing cosmos without polygon edges |
 | **09** | Realistic Stellar Photosphere | Pending | A_NORMAL | Queued | - | Multi-scale granulation, limb darkening, dynamic convection cells, and realistic heat |
