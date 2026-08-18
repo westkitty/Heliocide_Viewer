@@ -4,6 +4,7 @@ import { OrbitalInfrastructure } from './OrbitalInfrastructure';
 import { DistantCascadingStars } from './DistantCascadingStars';
 import { SiegeWallVoid } from './SiegeWallVoid';
 import { GalacticBackground } from './GalacticBackground';
+import { CollapseShockwave } from './CollapseShockwave';
 
 export function CelestialSystem() {
   return (
@@ -16,6 +17,9 @@ export function CelestialSystem() {
 
       {/* Central Collapsing Star & Accretion Singularity */}
       <StarCollapseShader />
+
+      {/* Relativistic Shockwave & Mass-Ejection Front */}
+      <CollapseShockwave />
 
       {/* Inhabited World: Hal'Ven IV */}
       <InhabitedPlanet />
