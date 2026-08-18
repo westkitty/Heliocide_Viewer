@@ -74,11 +74,9 @@ const PlanetFragmentShader = `
     float dayFactor = smoothstep(-0.12, 0.22, rawNdotL);
     float nightFactor = 1.0 - dayFactor;
 
-    // Sample terrain & night lights
     vec4 surface = texture2D(uSurfaceMap, vUv);
     vec4 night = texture2D(uNightMap, vUv);
 
-    // Altitude-dependent cloud drop-shadow calculation
     vec2 cloudUv = vec2(vUv.x + uCloudOffset, vUv.y);
     vec2 shadowUv = cloudUv + normalize(L.xy) * 0.008;
     vec4 shadowCloud = texture2D(uCloudMap, shadowUv);
@@ -101,7 +99,6 @@ const PlanetFragmentShader = `
     float denominator = 4.0 * NdotV * NdotL + 0.0001;
     vec3 specularBRDF = numerator / denominator;
 
-    // Atmospheric extinction & Sunset reddening
     vec3 middaySun = vec3(1.0, 0.96, 0.90) * 2.8;
     vec3 sunsetSun = vec3(1.0, 0.38, 0.10) * 2.2;
     float sunsetFactor = smoothstep(-0.08, 0.25, rawNdotL) * (1.0 - smoothstep(0.15, 0.65, rawNdotL));
@@ -113,9 +110,9 @@ const PlanetFragmentShader = `
     vec3 directLight = (diffuse + specularBRDF) * incidentSunColor * NdotL * cloudShadow;
 
     vec3 dayLit = directLight;
-    vec3 nightLit = night.rgb * (1.0 - uCityBlackout) * nightFactor * 2.5 + ambientSpace;
+    // Hierarchical multi-spectral night illumination
+    vec3 nightLit = night.rgb * (1.0 - uCityBlackout) * nightFactor * 2.6 + ambientSpace;
 
-    // Rayleigh scattering surface haze
     float rim = 1.0 - max(0.0, dot(N, V));
     vec3 rayleighSky = vec3(0.18, 0.58, 1.0);
     vec3 sunsetRim = vec3(1.0, 0.45, 0.15);
@@ -164,7 +161,6 @@ const CloudFragmentShader = `
     float NdotL = max(0.0, rawNdotL);
     float dayFactor = smoothstep(-0.15, 0.25, rawNdotL);
 
-    // Forward scattering through cloud water droplets
     float cosTheta = dot(V, L);
     float forwardScatter = pow(max(0.0, cosTheta), 4.0) * 0.45;
 
@@ -341,7 +337,6 @@ export function InhabitedPlanet() {
         const totalElev = elevation + (elevation > 0.05 ? mountainNoise : 0);
 
         let r = 0, g = 0, b = 0, roughness = 0.8;
-        let cityGlow = 0;
 
         if (totalElev < -0.15) {
           r = 6; g = 22; b = 58;
@@ -358,11 +353,9 @@ export function InhabitedPlanet() {
         } else if (totalElev < 0.04) {
           r = 42; g = 98; b = 54;
           roughness = 0.72;
-          cityGlow = Math.max(0, fbm(sx * 8.0, sy * 8.0, 4) * 255);
         } else if (totalElev < 0.22) {
           r = 30; g = 82; b = 38;
           roughness = 0.85;
-          cityGlow = Math.max(0, fbm(sx * 6.0, sy * 6.0, 4) * 180);
         } else if (totalElev < 0.38) {
           r = 142; g = 118; b = 78;
           roughness = 0.92;
@@ -379,25 +372,39 @@ export function InhabitedPlanet() {
         pData[idx + 2] = b;
         pData[idx + 3] = Math.floor(roughness * 255);
 
-        if (cityGlow > 70 && totalElev >= 0.0 && absLat < 1.2) {
-          const isNode = fbm(sx * 15.0, sy * 15.0, 2) > 0.35;
-          if (isNode) {
-            nData[idx] = 6;
-            nData[idx + 1] = 214;
-            nData[idx + 2] = 160;
-            nData[idx + 3] = 255;
-          } else {
-            nData[idx] = 255;
-            nData[idx + 1] = 195;
-            nData[idx + 2] = 80;
-            nData[idx + 3] = 255;
+        // Hierarchical Civilization Urban Network
+        // 1. Coastal Megacities & Habitation Craters
+        const coastalBelt = Math.abs(totalElev - 0.02) < 0.03;
+        const megaCityDensity = fbm(sx * 10.0 + 5.0, sy * 10.0 + sz * 8.0, 4);
+        const transportArtery = Math.pow(Math.abs(fbm(sx * 22.0, sy * 22.0 + sz * 15.0, 3)), 8.0) * 8.0;
+
+        let nr = 0, ng = 0, nb = 0;
+
+        if (totalElev >= -0.02 && totalElev < 0.28 && absLat < 1.15) {
+          if (megaCityDensity > 0.22) {
+            // Megalopolis Core (Incandescent Golden-Amber)
+            const coreIntensity = smoothstep(0.22, 0.45, megaCityDensity);
+            nr = Math.floor(THREE.MathUtils.lerp(210, 255, coreIntensity));
+            ng = Math.floor(THREE.MathUtils.lerp(140, 210, coreIntensity));
+            nb = Math.floor(THREE.MathUtils.lerp(40, 110, coreIntensity));
+          } else if (transportArtery > 0.4 || (coastalBelt && megaCityDensity > 0.08)) {
+            // Inter-City Transit Arteries & High-Speed Maglev Corridors (Sodium Amber)
+            nr = 245; ng = 158; nb = 35;
+          } else if (fbm(sx * 35.0, sy * 35.0, 2) > 0.42) {
+            // Suburban Townships
+            nr = 180; ng = 110; nb = 25;
           }
-        } else {
-          nData[idx] = 0;
-          nData[idx + 1] = 0;
-          nData[idx + 2] = 0;
-          nData[idx + 3] = 255;
+        } else if (totalElev < -0.02 && totalElev > -0.08 && absLat < 0.95) {
+          // Offshore Marine Arcologies & Aquatic Fusion Harvesters (Cyan / Aquamarine)
+          if (fbm(sx * 18.0 + 88.0, sy * 18.0, 3) > 0.38) {
+            nr = 14; ng = 240; nb = 220;
+          }
         }
+
+        nData[idx] = nr;
+        nData[idx + 1] = ng;
+        nData[idx + 2] = nb;
+        nData[idx + 3] = 255;
 
         // Swirling Coriolis Weather Formations with Cyclonic Spirals
         const coriolisShear = Math.sin(lat * 3.0) * 0.8;
@@ -453,7 +460,6 @@ export function InhabitedPlanet() {
 
     planetGroupRef.current.rotation.y += delta * 0.015;
 
-    // Clouds advect faster due to planetary trade winds
     uniforms.uCloudOffset.value += delta * 0.008;
     cloudUniforms.uCloudOffset.value += delta * 0.008;
 
@@ -484,7 +490,7 @@ export function InhabitedPlanet() {
 
   return (
     <group ref={planetGroupRef} position={[65, -25, -120]}>
-      {/* 1. Physically-Shaded Surface with Terrain Elevation & Cloud Drop-Shadows */}
+      {/* 1. Physically-Shaded Surface with Hierarchical Urban Lights */}
       <mesh>
         <sphereGeometry args={[24, 64, 64]} />
         <shaderMaterial
