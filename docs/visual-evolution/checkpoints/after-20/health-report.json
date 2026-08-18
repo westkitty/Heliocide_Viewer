@@ -1,0 +1,180 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-18T19:41:55.067927+00:00",
+  "project": {
+    "root": "/Users/andrew/heliocide_viewer",
+    "name": "heliocide-observatory",
+    "architecture": "mixed",
+    "renderer": "webgl",
+    "sourceFileCount": 31,
+    "dependencyCount": 19,
+    "frameLoopSignals": {
+      "requestAnimationFrame": [],
+      "setAnimationLoop": [],
+      "useFrame": [
+        "src/App.tsx",
+        "src/components/Camera/PlayerCameraController.tsx",
+        "src/components/PostProcessing/HeliocidePostProcessing.tsx",
+        "src/components/Space/CollapseShockwave.tsx",
+        "src/components/Space/DistantCascadingStars.tsx",
+        "src/components/Space/GalacticBackground.tsx",
+        "src/components/Space/InhabitedPlanet.tsx",
+        "src/components/Space/OrbitalInfrastructure.tsx",
+        "src/components/Space/SiegeWallVoid.tsx",
+        "src/components/Space/StarCollapseShader.tsx",
+        "src/components/Station/DebrisField.tsx",
+        "src/components/Station/NPCs.tsx",
+        "src/components/Station/StationInterior.tsx",
+        "src/components/Station/TacticalConsole.tsx"
+      ]
+    },
+    "physicsDependencies": [
+      "@react-three/rapier"
+    ]
+  },
+  "summary": {
+    "score": 82,
+    "band": "watch",
+    "findingCount": 2,
+    "severityCounts": {
+      "high": 1,
+      "medium": 1
+    },
+    "decisiveFinding": "TJS-R3F-001",
+    "staticOnly": true
+  },
+  "positiveSignals": [
+    {
+      "id": "TJS-POS-LOOP",
+      "category": "renderer-loop",
+      "title": "A frame-loop mechanism is visible",
+      "evidence": [
+        "useFrame"
+      ]
+    },
+    {
+      "id": "TJS-POS-TIME",
+      "category": "renderer-loop",
+      "title": "Fixed-step timing signals are present",
+      "evidence": [
+        "src/App.tsx"
+      ]
+    },
+    {
+      "id": "TJS-POS-DISPOSE",
+      "category": "assets-lifecycle",
+      "title": "Explicit disposal calls are present",
+      "evidence": [
+        ".chrome-headless-profile/Default/Extensions/ghbmnnjooekpmoecnnnilnnbdlolhkhi/1.109.1_0/offscreendocument_main.js",
+        ".chrome-headless-profile/Default/Extensions/ghbmnnjooekpmoecnnnilnnbdlolhkhi/1.109.1_0/service_worker_bin_prod.js",
+        ".chrome-headless-profile/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/craw_background.js",
+        ".chrome-headless-profile/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/craw_window.js"
+      ]
+    },
+    {
+      "id": "TJS-POS-DEPS",
+      "category": "dependencies",
+      "title": "Core Three.js ecosystem dependencies are pinned",
+      "evidence": [
+        "three: 0.169.0",
+        "@react-three/fiber: 8.17.10",
+        "@react-three/drei: 9.114.3",
+        "@react-three/rapier: 1.5.0"
+      ]
+    },
+    {
+      "id": "TJS-POS-TEST",
+      "category": "testing-observability",
+      "title": "Browser or integration test files are present",
+      "evidence": [
+        "tests/timeline.test.js"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "TJS-R3F-001",
+      "category": "state-ownership",
+      "severity": "high",
+      "confidence": "high",
+      "title": "React state setter detected inside useFrame",
+      "evidence": [
+        "src/App.tsx",
+        "src/components/PostProcessing/HeliocidePostProcessing.tsx",
+        "src/components/Space/CollapseShockwave.tsx",
+        "src/components/Space/StarCollapseShader.tsx",
+        "src/components/Station/TacticalConsole.tsx"
+      ],
+      "impact": "Per-frame React reconciliation can cause rerenders, lifecycle instability, and frame-time spikes.",
+      "recommendation": "Move high-frequency state to refs, physics, ECS, or transient store access and publish only low-frequency UI state to React."
+    },
+    {
+      "id": "TJS-LIFE-002",
+      "category": "testing-observability",
+      "severity": "medium",
+      "confidence": "medium",
+      "title": "Unload behavior lacks renderer resource-count evidence",
+      "evidence": [
+        ".chrome-headless-profile/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/craw_background.js",
+        ".chrome-headless-profile/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/craw_window.js"
+      ],
+      "impact": "Cleanup may exist in source but sustained GPU-resource growth remains untested.",
+      "recommendation": "Add a repeated load/unload scenario and record renderer resource counts before, during, after, and after settling."
+    }
+  ],
+  "inventory": {
+    "dependencies": {
+      "@react-three/drei": "9.114.3",
+      "@react-three/fiber": "8.17.10",
+      "@react-three/rapier": "1.5.0",
+      "lucide-react": "0.453.0",
+      "react": "18.3.1",
+      "react-dom": "18.3.1",
+      "three": "0.169.0",
+      "three-mesh-bvh": "0.8.2",
+      "three-stdlib": "2.33.0",
+      "troika-three-text": "0.50.0",
+      "zustand": "4.5.5",
+      "@types/node": "^22.7.5",
+      "@types/react": "^18.3.11",
+      "@types/react-dom": "^18.3.0",
+      "@types/three": "^0.169.0",
+      "@vitejs/plugin-react": "^4.3.2",
+      "puppeteer-core": "^25.8.0",
+      "typescript": "^5.6.3",
+      "vite": "^5.4.8"
+    },
+    "rendererWebGLFiles": [],
+    "rendererWebGPUFiles": [],
+    "fixedStepFiles": [
+      "src/App.tsx"
+    ],
+    "directSceneMutationFiles": [],
+    "loaderFiles": [],
+    "assetManagerFiles": [],
+    "disposeFiles": [
+      ".chrome-headless-profile/Default/Extensions/ghbmnnjooekpmoecnnnilnnbdlolhkhi/1.109.1_0/offscreendocument_main.js",
+      ".chrome-headless-profile/Default/Extensions/ghbmnnjooekpmoecnnnilnnbdlolhkhi/1.109.1_0/service_worker_bin_prod.js",
+      ".chrome-headless-profile/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/craw_background.js",
+      ".chrome-headless-profile/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/craw_window.js"
+    ],
+    "unloadFiles": [
+      ".chrome-headless-profile/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/craw_background.js",
+      ".chrome-headless-profile/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/craw_window.js"
+    ],
+    "rendererInfoFiles": [],
+    "remoteAssetFiles": [],
+    "saveFiles": [],
+    "saveVersionFiles": [],
+    "contextLossFiles": [
+      "src/App.tsx"
+    ],
+    "browserTestFiles": [
+      "tests/timeline.test.js"
+    ]
+  },
+  "limitations": [
+    "Static heuristics do not prove runtime behavior, memory recovery, frame rate, thermals, visual correctness, or user-path success.",
+    "Serious findings require manual inspection of cited files before repair."
+  ]
+}

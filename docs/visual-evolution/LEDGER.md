@@ -30,7 +30,7 @@
 | **17** | Photon-Ring Detail | Pending | D_COLLAPSE | ACCEPTED | 32 -> 40 | Ultra-thin, razor-sharp photon ring lensing boundary |
 | **18** | Gravitational Lensing | Pending | D_COLLAPSE | ACCEPTED | 32 -> 40 | Einstein ring distortion warping background starfield and space behind singularity |
 | **19** | Black-Hole Depth / Occlusion Coherence | Pending | D_COLLAPSE | ACCEPTED | 32 -> 40 | Unified depth compositing preventing star bleeding through event horizon |
-| **20** | Post-Collapse System Lighting | Pending | D_COLLAPSE / E_BREACH | Queued | - | Dramatic stellar light loss, localized station emergency lighting, and dark space |
+| **20** | Post-Collapse System Lighting | Pending | D_COLLAPSE / E_BREACH | ACCEPTED | 31 -> 40 | Dramatic stellar light loss, localized station emergency lighting, and dark space |
 | **21** | Real Planetary Topology | Pending | A_NORMAL | Queued | - | Multi-scale fractal elevation, continental coastlines, and tectonic geography |
 | **22** | Planetary PBR Surface | Pending | A_NORMAL | Queued | - | Glancing specular ocean response, mountain roughness, and land albedo maps |
 | **23** | Atmospheric Scattering | Pending | A_NORMAL | Queued | - | Rayleigh/Mie atmospheric limb glow and realistic terminator scattering |

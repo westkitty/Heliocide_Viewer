@@ -10,23 +10,63 @@ import { DebrisField } from './DebrisField';
 export function StationInterior() {
   const breachRef = useRef<THREE.Group>(null);
   const emergencyLightRef = useRef<THREE.PointLight>(null);
+  const overheadLightRef = useRef<THREE.PointLight>(null);
+  const ambientLightRef = useRef<THREE.AmbientLight>(null);
+  const windowRimLightRef = useRef<THREE.DirectionalLight>(null);
+
   const currentTime = useTimelineStore((s) => s.currentTime);
-  const currentPhase = useTimelineStore((s) => s.currentPhase);
 
   useFrame(() => {
-    // Dynamic station lights & emergency flashing
-    if (emergencyLightRef.current) {
-      if (currentPhase === 'PHASE_A_NORMAL') {
-        emergencyLightRef.current.intensity = 0.5;
+    // Dynamic station catastrophic lighting overhaul
+    if (emergencyLightRef.current && overheadLightRef.current && ambientLightRef.current && windowRimLightRef.current) {
+      if (currentTime < 52.0) {
+        // Phase A & B: Nominal operation with bright overhead power and warm solar illumination
+        ambientLightRef.current.intensity = 0.35;
+        ambientLightRef.current.color.set('#bae6fd');
+
+        overheadLightRef.current.intensity = 1.2;
+        overheadLightRef.current.color.set('#f8fafc');
+
+        emergencyLightRef.current.intensity = 0.4;
         emergencyLightRef.current.color.set('#38bdf8');
-      } else if (currentPhase === 'PHASE_B_AUREAL_ALERT' || currentPhase === 'PHASE_C_SHARD_GOD_AUTHORITY') {
-        emergencyLightRef.current.intensity = 1.0 + Math.sin(currentTime * 5.0) * 0.5;
-        emergencyLightRef.current.color.set('#f59e0b');
-      } else {
-        // Red flashing emergency
-        const flash = Math.sin(currentTime * 10.0) > 0 ? 2.5 : 0.2;
-        emergencyLightRef.current.intensity = flash;
+
+        windowRimLightRef.current.intensity = 1.8;
+        windowRimLightRef.current.color.set('#fff4e6');
+      } else if (currentTime < 78.0) {
+        // Phase D (Collapse): Blinding flash followed by catastrophic main generator failure
+        const collapseT = (currentTime - 52.0) / 26.0;
+        
+        // Power grid failure flickering
+        const powerFlicker = Math.sin(currentTime * 30.0) > 0 ? 0.2 : 0.02;
+        overheadLightRef.current.intensity = (1.0 - collapseT) * powerFlicker * 1.5;
+        overheadLightRef.current.color.set('#fed7aa');
+
+        ambientLightRef.current.intensity = THREE.MathUtils.lerp(0.35, 0.06, collapseT);
+        ambientLightRef.current.color.set('#0f172a');
+
+        // Pulsing amber/red emergency warning
+        const alertPulse = Math.sin(currentTime * 8.0) * 0.5 + 0.5;
+        emergencyLightRef.current.intensity = 1.2 * alertPulse + 0.2;
         emergencyLightRef.current.color.set('#ef4444');
+
+        // Window sunlight shifting from solar flash to dim cyan accretion
+        windowRimLightRef.current.intensity = THREE.MathUtils.lerp(2.5, 0.4, collapseT);
+        windowRimLightRef.current.color.set('#00f0ff');
+      } else {
+        // Phase E, F, G: Total power grid collapse, deep-space gloom, isolated emergency strobes
+        ambientLightRef.current.intensity = 0.03; // True deep space darkness
+        ambientLightRef.current.color.set('#020617');
+
+        overheadLightRef.current.intensity = 0.0; // Complete main power blackout
+
+        // High-contrast emergency red staccato strobe + sparks
+        const strobe = Math.sin(currentTime * 12.0) > 0.4 ? 2.8 : 0.1;
+        emergencyLightRef.current.intensity = strobe;
+        emergencyLightRef.current.color.set('#dc2626');
+
+        // Faint cold accretion blue light penetrating the broken observation glass
+        windowRimLightRef.current.intensity = 0.25;
+        windowRimLightRef.current.color.set('#0284c7');
       }
     }
 
@@ -65,7 +105,7 @@ export function StationInterior() {
         />
       </mesh>
 
-      {/* 2. Panoramic Window Frame & Glass Facing Space (Z = -7.5) */}
+      {/* 2. Panoramic Window Frame & Glass Facing Space (Z = -7.9) */}
       <group position={[0, 3.5, -7.9]}>
         {/* Upper Arch Frame */}
         <mesh position={[0, 3.8, 0]}>
@@ -194,26 +234,11 @@ export function StationInterior() {
         EVACUATION BAY 04 / SHUTTLE DOCK
       </Text>
 
-      {/* Corridor Extension Geometry */}
-      <group position={[0, 0, 11]}>
-        <mesh position={[0, -0.05, 0]}>
-          <boxGeometry args={[3.8, 0.1, 6.0]} />
-          <meshStandardMaterial color="#090d16" roughness={0.3} />
-        </mesh>
-        <mesh position={[-2.0, 2.0, 0]}>
-          <boxGeometry args={[0.2, 4.0, 6.0]} />
-          <meshStandardMaterial color="#1e293b" roughness={0.5} />
-        </mesh>
-        <mesh position={[2.0, 2.0, 0]}>
-          <boxGeometry args={[0.2, 4.0, 6.0]} />
-          <meshStandardMaterial color="#1e293b" roughness={0.5} />
-        </mesh>
-      </group>
-
-      {/* Lighting Architecture */}
-      <ambientLight intensity={0.4} color="#e0f2fe" />
-      <pointLight position={[0, 5.5, 0]} intensity={1.2} distance={15} color="#bae6fd" />
-      <pointLight ref={emergencyLightRef} position={[0, 4.5, -2]} intensity={0.8} distance={12} />
+      {/* Dynamic Catastrophic Lighting Architecture */}
+      <ambientLight ref={ambientLightRef} intensity={0.35} color="#bae6fd" />
+      <pointLight ref={overheadLightRef} position={[0, 5.5, 0]} intensity={1.2} distance={15} color="#f8fafc" />
+      <pointLight ref={emergencyLightRef} position={[0, 4.5, -2]} intensity={0.8} distance={12} color="#38bdf8" />
+      <directionalLight ref={windowRimLightRef} position={[0, 8, -20]} intensity={1.8} color="#fff4e6" />
 
       {/* Interactive Central Tactical Console */}
       <TacticalConsole />
