@@ -7,6 +7,7 @@ import { TacticalConsole } from './TacticalConsole';
 import { NPCs } from './NPCs';
 import { DebrisField } from './DebrisField';
 import { StationExterior } from './StationExterior';
+import { ObservationGlass } from './ObservationGlass';
 
 export function StationInterior() {
   const breachRef = useRef<THREE.Group>(null);
@@ -146,18 +147,8 @@ export function StationInterior() {
           <boxGeometry args={[0.3, 7.5, 0.5]} />
           <meshStandardMaterial color="#334155" metalness={0.95} roughness={0.15} />
         </mesh>
-        {/* Transparent Reinforced Observation Glass */}
-        <mesh>
-          <planeGeometry args={[16, 7.0]} />
-          <meshPhysicalMaterial
-            color="#bae6fd"
-            transparent
-            opacity={0.08}
-            roughness={0.05}
-            transmission={0.95}
-            thickness={0.5}
-          />
-        </mesh>
+        {/* Custom Physical Reinforced Observation Glass */}
+        <ObservationGlass />
       </group>
 
       {/* 3. Ceiling with Reinforced Structural Trusses & Conduit Lines */}

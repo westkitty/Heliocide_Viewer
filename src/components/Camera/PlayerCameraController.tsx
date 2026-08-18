@@ -186,6 +186,10 @@ export function CameraManager() {
         playerPos.current.y + bobY + swayY,
         playerPos.current.z
       );
+
+      if (typeof document !== 'undefined' && !document.pointerLockElement) {
+        camera.lookAt(0, 1.7, -100);
+      }
     } else if (cameraMode === 'CINEMATIC') {
       // 5. Authored Cinematic Flight Arc & Damped LookAt
       const t = Math.min(1.0, (currentTime - 122.0) / 16.0);
