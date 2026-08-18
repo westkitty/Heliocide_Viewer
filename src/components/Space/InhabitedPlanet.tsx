@@ -66,11 +66,7 @@ const PlanetFragmentShader = `
     vec3 H = normalize(L + V);
 
     float rawNdotL = dot(N, L);
-    // Physical solar disc angular penumbra (-0.10 to +0.10 rad)
-    float penumbraMin = -0.10;
-    float penumbraMax = 0.10;
-    float dayFactor = smoothstep(penumbraMin, penumbraMax, rawNdotL);
-    float nightFactor = 1.0 - dayFactor;
+    float dayFactor = smoothstep(-0.10, 0.10, rawNdotL);
 
     float NdotL = max(0.0, rawNdotL);
     float NdotV = max(0.001, dot(N, V));
@@ -102,7 +98,6 @@ const PlanetFragmentShader = `
     float denominator = 4.0 * NdotV * NdotL + 0.0001;
     vec3 specularBRDF = numerator / denominator;
 
-    // Atmospheric extinction & Sunset reddening along the solar terminator
     vec3 middaySun = vec3(1.0, 0.96, 0.90) * 2.8;
     vec3 sunsetSun = vec3(1.0, 0.38, 0.10) * 2.2;
     float sunsetFactor = smoothstep(-0.06, 0.18, rawNdotL) * (1.0 - smoothstep(0.08, 0.45, rawNdotL));
@@ -114,7 +109,6 @@ const PlanetFragmentShader = `
     vec3 directLight = (diffuse + specularBRDF) * incidentSunColor * NdotL * cloudShadow;
 
     vec3 dayLit = directLight;
-    // Night lights activate smoothly only in the umbra and deep twilight penumbra
     float cityActivation = smoothstep(0.06, -0.06, rawNdotL);
     vec3 nightLit = night.rgb * (1.0 - uCityBlackout) * cityActivation * 2.6 + ambientSpace;
 
@@ -476,13 +470,30 @@ export function InhabitedPlanet() {
     }
     materialRef.current.uniforms.uCityBlackout.value = blackout;
 
-    if (currentTime > 78.0) {
-      const decay = Math.min(1.0, (currentTime - 78.0) / 40.0);
-      planetGroupRef.current.position.y = -25 - decay * 15;
-      planetGroupRef.current.rotation.z = decay * 0.4;
-    } else {
-      planetGroupRef.current.position.y = -25;
+    // Relativistic Planetary Orbital Inertia & Axial Precession during Collapse
+    if (currentTime < 52.0) {
+      planetGroupRef.current.position.set(65, -25, -120);
+      planetGroupRef.current.rotation.x = 0;
       planetGroupRef.current.rotation.z = 0.05;
+    } else if (currentTime < 78.0) {
+      const t = (currentTime - 52.0) / 26.0;
+      // Gravitational shear unmooring and axial nutation wobble
+      const orbitalDriftX = 65 + Math.sin(currentTime * 0.25) * 3.5 * t;
+      const orbitalDriftY = -25 - t * 8.0;
+      const orbitalDriftZ = -120 - t * 14.0;
+      planetGroupRef.current.position.set(orbitalDriftX, orbitalDriftY, orbitalDriftZ);
+
+      planetGroupRef.current.rotation.x = Math.sin(currentTime * 1.8) * 0.06 * t;
+      planetGroupRef.current.rotation.z = 0.05 + t * 0.28 + Math.cos(currentTime * 1.4) * 0.04 * t;
+    } else {
+      const postT = Math.min(1.0, (currentTime - 78.0) / 50.0);
+      const orbitalDriftX = 65 + Math.sin(78.0 * 0.25) * 3.5 - postT * 12.0;
+      const orbitalDriftY = -33.0 - postT * 22.0;
+      const orbitalDriftZ = -134.0 - postT * 28.0;
+      planetGroupRef.current.position.set(orbitalDriftX, orbitalDriftY, orbitalDriftZ);
+
+      planetGroupRef.current.rotation.x = 0.06 + Math.sin(currentTime * 0.8) * 0.03;
+      planetGroupRef.current.rotation.z = 0.33 + postT * 0.15;
     }
   });
 

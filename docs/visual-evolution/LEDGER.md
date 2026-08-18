@@ -37,7 +37,7 @@
 | **24** | Realistic Cloud System | Pending | A_NORMAL | ACCEPTED | 32 -> 40 | Multi-layered advecting weather formations with altitude shadowing |
 | **25** | Geographic City-Light Distribution | Pending | A_NORMAL | ACCEPTED | 32 -> 40 | Realistic clustered urban networks restricted to coastlines and fertile landmasses |
 | **26** | Day/Night Terminator | Pending | A_NORMAL | ACCEPTED | 32 -> 40 | Physically accurate star-oriented terminator and nightside city light activation |
-| **27** | Planetary Orbital Inertia During Collapse | Pending | E_BREACH | Queued | - | Gravitational shear acceleration, orbital eccentricity, and massive inertia |
+| **27** | Planetary Orbital Inertia During Collapse | Pending | E_BREACH | ACCEPTED | 32 -> 40 | Gravitational shear acceleration, orbital eccentricity, and massive inertia |
 | **28** | Tidal / Atmospheric Stripping Effects | Pending | E_BREACH | Queued | - | Atmospheric envelope peeling and tidal bulge under extreme gravity gradient |
 | **29** | Civilization Failure Progression | Pending | E_BREACH | Queued | - | Regional power grid blackouts and emergency beacon cascades across dark side |
 | **30** | Orbital Infrastructure Quality Pass | Pending | A_NORMAL | Queued | - | High-detail solar habitats, docking gantries, scale paneling, and navigation beacons |
