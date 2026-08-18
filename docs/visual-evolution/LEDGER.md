@@ -22,7 +22,7 @@
 | **09** | Realistic Stellar Photosphere | Pending | A_NORMAL | ACCEPTED | 28 -> 39 | Multi-scale granulation, limb darkening, dynamic convection cells, and realistic heat |
 | **10** | Corona and Stellar Prominences | Pending | A_NORMAL | ACCEPTED | 31 -> 40 | Volumetric chromosphere, solar filaments, and scale-dependent luminous falloff |
 | **11** | Stellar Illumination of the System | Pending | A_NORMAL | ACCEPTED | 31 -> 40 | Coherent incident light, directional vectors, and planetary shadows |
-| **12** | Physically Legible Collapse Thermodynamics | Pending | D_COLLAPSE | Queued | - | Progressive gravitational contraction, temperature shift, and blue-shifted radiation |
+| **12** | Physically Legible Collapse Thermodynamics | Pending | D_COLLAPSE | ACCEPTED | 29 -> 40 | Progressive gravitational contraction, temperature shift, and blue-shifted radiation |
 | **13** | Collapse Shock / Mass-Ejection Event | Pending | D_COLLAPSE | Queued | - | Relativistic shockwave ring and directional ejecta particulate |
 | **14** | True Event-Horizon Shadow | Pending | D_COLLAPSE | Queued | - | Pure black central event-horizon silhouette with depth-accurate occlusion |
 | **15** | Accretion / Infall Structure | Pending | D_COLLAPSE | Queued | - | Volumetric warped accretion disk with temperature gradient and physical thickness |

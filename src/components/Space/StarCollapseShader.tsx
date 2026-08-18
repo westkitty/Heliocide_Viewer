@@ -21,10 +21,9 @@ const StarVertexShader = `
 
 const StarFragmentShader = `
   uniform float uTime;
-  uniform float uCollapseProgress; // 0.0 (normal) to 1.0 (singularity)
+  uniform float uCurrentTime;
+  uniform float uCollapseProgress; // 0.0 to 1.0
   uniform float uLensingIntensity;
-  uniform vec3 uColorNormal;
-  uniform vec3 uColorCollapsed;
   
   varying vec2 vUv;
   varying vec3 vNormal;
@@ -96,38 +95,62 @@ const StarFragmentShader = `
     vec3 normal = normalize(vNormal);
     vec3 viewDir = normalize(cameraPosition - vWorldPosition);
     float NdotV = max(0.0, dot(normal, viewDir));
+    float rim = 1.0 - NdotV;
 
-    float speed = 0.25 + uCollapseProgress * 2.0;
-    float granules = solarGranulation(vPosition * 0.5, uTime * speed);
-    float macroFlow = snoise(vPosition * 0.2 + vec3(0.0, uTime * speed * 0.4, 0.0)) * 0.5 + 0.5;
+    // Stage 1-4 Thermodynamic Physics
+    // Stage 1 (progress 0.0-0.2): Normal G-type solar convection
+    // Stage 2 (progress 0.2-0.45): Compression blue-white radiation surge (ionizing flash)
+    // Stage 3 (progress 0.45-0.75): Core fade & Event Horizon nucleation
+    // Stage 4 (progress 0.75-1.0): Relativistic accretion ring & Doppler boosting
 
+    float convSpeed = 0.25 + uCollapseProgress * 3.5;
+    float granules = solarGranulation(vPosition * 0.5, uTime * convSpeed);
+    float macroFlow = snoise(vPosition * 0.2 + vec3(0.0, uTime * convSpeed * 0.4, 0.0)) * 0.5 + 0.5;
+
+    // Eddington limb darkening
     float mu = NdotV;
     float eddingtonLimb = clamp(1.0 - 0.65 * (1.0 - mu) - 0.25 * (1.0 - sqrt(max(0.0, mu))), 0.15, 1.0);
 
+    // Normal solar colors (5800K)
     vec3 deepCore = vec3(1.0, 0.98, 0.92);
     vec3 cellGold = vec3(1.0, 0.76, 0.24);
     vec3 laneAmber = vec3(0.85, 0.42, 0.08);
 
-    vec3 photosphere = mix(laneAmber, cellGold, granules);
-    photosphere = mix(photosphere, deepCore, macroFlow * 0.6 + granules * 0.4);
-    vec3 normalStar = photosphere * eddingtonLimb * 1.8;
+    vec3 normalPhotosphere = mix(laneAmber, cellGold, granules);
+    normalPhotosphere = mix(normalPhotosphere, deepCore, macroFlow * 0.6 + granules * 0.4) * eddingtonLimb * 1.8;
 
-    float rim = 1.0 - NdotV;
-    float accretionRing = pow(rim, 2.5) * (1.5 + granules * 2.0);
-    vec3 singularityColor = uColorCollapsed * accretionRing * 3.5;
-    
-    if (uCollapseProgress > 0.4) {
-      float horizonFactor = smoothstep(0.4, 0.8, uCollapseProgress);
-      float centerHole = smoothstep(0.35 * (1.0 - horizonFactor), 0.7, rim);
-      singularityColor *= centerHole;
+    // Thermal compression blue-white surge (>30,000K)
+    vec3 surgeColor = vec3(0.75, 0.88, 1.0) * (2.5 + granules * 1.5);
+
+    // Relativistic accretion color (cyan-blue synchrotron emission)
+    vec3 accretionBase = vec3(0.0, 0.85, 1.0);
+    // Relativistic Doppler beaming (approaching rim is brighter)
+    float dopplerBeam = 1.0 + normal.x * 0.45;
+    vec3 accretionColor = accretionBase * pow(rim, 2.5) * 4.0 * dopplerBeam;
+
+    // Blend thermodynamics across 4 physical stages
+    vec3 stateColor = normalPhotosphere;
+    if (uCollapseProgress < 0.25) {
+      // Transition Normal -> Compression Surge
+      float t = uCollapseProgress / 0.25;
+      stateColor = mix(normalPhotosphere, surgeColor, t);
+    } else if (uCollapseProgress < 0.6) {
+      // Transition Compression Surge -> Relativistic Accretion
+      float t = (uCollapseProgress - 0.25) / 0.35;
+      stateColor = mix(surgeColor, accretionColor, t);
+    } else {
+      // Established Accretion disc
+      stateColor = accretionColor;
     }
 
-    vec3 finalColor = mix(normalStar, singularityColor, uCollapseProgress);
+    // Black Hole Event Horizon Nucleation (True Black Center)
+    if (uCollapseProgress > 0.35) {
+      float horizonGrow = smoothstep(0.35, 0.85, uCollapseProgress);
+      float centerOcclusion = smoothstep(0.25 * (1.0 - horizonGrow), 0.75, rim);
+      stateColor *= centerOcclusion;
+    }
 
-    float collapseFlash = smoothstep(0.2, 0.4, uCollapseProgress) * (1.0 - smoothstep(0.4, 0.65, uCollapseProgress)) * 4.0;
-    finalColor += vec3(0.85, 0.92, 1.0) * collapseFlash;
-
-    gl_FragColor = vec4(finalColor, 1.0);
+    gl_FragColor = vec4(stateColor, 1.0);
   }
 `;
 
@@ -145,7 +168,6 @@ const CoronaVertexShader = `
 const CoronaFragmentShader = `
   uniform float uTime;
   uniform float uCollapseProgress;
-  uniform vec3 uCoronaColor;
 
   varying vec2 vUv;
   varying vec3 vPosition;
@@ -208,7 +230,6 @@ const CoronaFragmentShader = `
 
     float angle = atan(centered.y, centered.x);
 
-    // Coronal streamers and magnetic arch filaments
     float streamer1 = snoise(vec3(cos(angle * 4.0), sin(angle * 4.0), uTime * 0.12));
     float streamer2 = snoise(vec3(cos(angle * 12.0) * 2.0, sin(angle * 12.0) * 2.0, uTime * 0.25));
     float prominence = max(0.0, snoise(vec3(cos(angle * 8.0) * 3.0, sin(angle * 8.0) * 3.0, uTime * 0.35)));
@@ -216,9 +237,8 @@ const CoronaFragmentShader = `
     float radialFalloff = pow(1.0 - smoothstep(0.38, 1.0, dist), 2.2);
     float filamentDensity = 0.5 + streamer1 * 0.3 + streamer2 * 0.2 + prominence * 0.6;
 
-    // Normal solar corona vs collapsed accretion disc
     vec3 normalCorona = vec3(1.0, 0.78, 0.32) * radialFalloff * filamentDensity * 2.2;
-    vec3 collapsedCorona = uCoronaColor * pow(radialFalloff, 1.5) * 3.0;
+    vec3 collapsedCorona = vec3(0.0, 0.9, 1.0) * pow(radialFalloff, 1.5) * 3.0;
 
     vec3 color = mix(normalCorona, collapsedCorona, uCollapseProgress);
     float alpha = clamp(radialFalloff * filamentDensity * (1.0 - uCollapseProgress * 0.5), 0.0, 1.0);
@@ -234,16 +254,14 @@ export function StarCollapseShader() {
 
   const starUniforms = useMemo(() => ({
     uTime: { value: 0 },
+    uCurrentTime: { value: 0 },
     uCollapseProgress: { value: 0 },
-    uLensingIntensity: { value: 0 },
-    uColorNormal: { value: new THREE.Color('#ffaa33') },
-    uColorCollapsed: { value: new THREE.Color('#00e5ff') }
+    uLensingIntensity: { value: 0 }
   }), []);
 
   const coronaUniforms = useMemo(() => ({
     uTime: { value: 0 },
-    uCollapseProgress: { value: 0 },
-    uCoronaColor: { value: new THREE.Color('#00e5ff') }
+    uCollapseProgress: { value: 0 }
   }), []);
 
   useFrame((_, delta) => {
@@ -252,6 +270,7 @@ export function StarCollapseShader() {
     coronaUniforms.uTime.value += delta;
 
     const currentTime = useTimelineStore.getState().currentTime;
+    starUniforms.uCurrentTime.value = currentTime;
 
     let progress = 0;
     if (currentTime < 52.0) {
@@ -270,7 +289,7 @@ export function StarCollapseShader() {
     const pulse = progress > 0 && progress < 1 ? Math.sin(currentTime * 18.0) * 0.03 * (1 - progress) : 0;
     meshRef.current.scale.setScalar(Math.max(0.2, baseScale + pulse));
 
-    meshRef.current.rotation.y += delta * (0.05 + progress * 0.4);
+    meshRef.current.rotation.y += delta * (0.05 + progress * 0.5);
 
     if (coronaRef.current) {
       coronaRef.current.scale.setScalar((baseScale + pulse) * 1.55);
@@ -285,14 +304,14 @@ export function StarCollapseShader() {
       if (progress <= 0) {
         lightRef.current.color.copy(normalColor);
         lightRef.current.intensity = 15000;
-      } else if (progress < 0.4) {
-        const t = progress / 0.4;
+      } else if (progress < 0.35) {
+        const t = progress / 0.35;
         lightRef.current.color.lerpColors(normalColor, flashColor, t);
-        lightRef.current.intensity = THREE.MathUtils.lerp(15000, 32000, t);
+        lightRef.current.intensity = THREE.MathUtils.lerp(15000, 35000, t);
       } else {
-        const t = (progress - 0.4) / 0.6;
+        const t = (progress - 0.35) / 0.65;
         lightRef.current.color.lerpColors(flashColor, collapsedColor, t);
-        lightRef.current.intensity = THREE.MathUtils.lerp(32000, 3200, t);
+        lightRef.current.intensity = THREE.MathUtils.lerp(35000, 3200, t);
       }
     }
   });
