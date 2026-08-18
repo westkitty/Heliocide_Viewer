@@ -3,14 +3,14 @@
     "available": true,
     "branch": "main",
     "dirty": true,
-    "head": "55d420c513c1db348530c2c8ca667f98cc4e4b4c",
-    "head_subject": "visual-38: practical linear luminaires, focused console task spotlight, and emergency rotating strobes",
+    "head": "17c72abf86a115f8ec5140ef8b9b3206f1c3fb6e",
+    "head_subject": "visual-39: catastrophic hull breach with jagged titanium shards and arcing electrical discharge",
     "is_repo": true,
     "remote_url": "git@github.com:westkitty/Heliocide_Viewer.git",
     "repo_root": "/Users/andrew/heliocide_viewer",
-    "staged_count": 0,
-    "tracked_modified_count": 0,
-    "untracked_count": 1
+    "staged_count": 1,
+    "tracked_modified_count": 3,
+    "untracked_count": 0
   },
   "identity": {
     "name": "heliocide_viewer",
@@ -33,16 +33,16 @@
     "Validate the project with the hinted run/dev command: npm run dev",
     "Validate the project with the hinted build command: npm run build"
   ],
-  "scan_timestamp": "2026-08-18T20:31:01+00:00",
+  "scan_timestamp": "2026-08-18T20:43:01+00:00",
   "scanner_version": "1.1.0",
   "signature": {
     "git_dirty": {
       "dirty": true,
-      "staged_count": 0,
-      "tracked_modified_count": 0,
-      "untracked_count": 1
+      "staged_count": 1,
+      "tracked_modified_count": 3,
+      "untracked_count": 0
     },
-    "git_head": "55d420c513c1db348530c2c8ca667f98cc4e4b4c",
+    "git_head": "17c72abf86a115f8ec5140ef8b9b3206f1c3fb6e",
     "project_type": "vite_app",
     "scanner_version": "1.1.0",
     "watched_files": {

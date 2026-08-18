@@ -9,6 +9,7 @@ import { DebrisField } from './DebrisField';
 import { StationExterior } from './StationExterior';
 import { ObservationGlass } from './ObservationGlass';
 import { HullBreach } from './HullBreach';
+import { DecompressionVFX } from './DecompressionVFX';
 
 export function StationInterior() {
   const breachRef = useRef<THREE.Group>(null);
@@ -316,6 +317,9 @@ export function StationInterior() {
 
       {/* Dynamic Hull Breach Architecture */}
       <HullBreach />
+
+      {/* Atmospheric Decompression Particle VFX */}
+      <DecompressionVFX />
 
       {/* 6. Back Wall & Evacuation Corridor (Z = 7.9) */}
       <mesh position={[-5.5, 3.5, 7.9]}>

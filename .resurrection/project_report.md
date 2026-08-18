@@ -13,10 +13,10 @@
 
 ## Git State
 - Summary: Repo root: /Users/andrew/heliocide_viewer | Branch: main | Status: dirty | Remote: git@github.com:westkitty/Heliocide_Viewer.git
-- Latest commit: 55d420c513c1db348530c2c8ca667f98cc4e4b4c visual-38: practical linear luminaires, focused console task spotlight, and emergency rotating strobes
-- Tracked modified count: 0
-- Untracked count: 1
-- Staged count: 0
+- Latest commit: 17c72abf86a115f8ec5140ef8b9b3206f1c3fb6e visual-39: catastrophic hull breach with jagged titanium shards and arcing electrical discharge
+- Tracked modified count: 3
+- Untracked count: 0
+- Staged count: 1
 
 ## Commands Detected
 - [build] npm run build (package.json:scripts.build)
@@ -47,5 +47,5 @@ No secret-risk matches detected.
 5. Validate the project with the hinted build command: npm run build
 
 ## Scan Metadata
-- Timestamp: 2026-08-18T20:31:01+00:00
+- Timestamp: 2026-08-18T20:43:01+00:00
 - Scanner version: 1.1.0
