@@ -5,7 +5,6 @@ import { useTimelineStore } from '../../store/timelineStore';
 
 const TOTAL_STARS = 5000;
 
-// Deterministic PRNG
 function createSeededRNG(seed = 17618934) {
   let s = seed;
   return () => {
@@ -14,14 +13,13 @@ function createSeededRNG(seed = 17618934) {
   };
 }
 
-// Astronomical Harvard spectral types and B-V color temperatures
 const SPECTRAL_CLASSES = [
-  { weight: 0.04, color: new THREE.Color('#9bb0ff') }, // O/B Blue Giant
-  { weight: 0.14, color: new THREE.Color('#cad7ff') }, // A White
-  { weight: 0.20, color: new THREE.Color('#f8f9ff') }, // F Yellow-White
-  { weight: 0.30, color: new THREE.Color('#fff4e8') }, // G Solar Yellow
-  { weight: 0.22, color: new THREE.Color('#ffd2a1') }, // K Orange
-  { weight: 0.10, color: new THREE.Color('#ffb380') }  // M Red Dwarf
+  { weight: 0.04, color: new THREE.Color('#9bb0ff') },
+  { weight: 0.14, color: new THREE.Color('#cad7ff') },
+  { weight: 0.20, color: new THREE.Color('#f8f9ff') },
+  { weight: 0.30, color: new THREE.Color('#fff4e8') },
+  { weight: 0.22, color: new THREE.Color('#ffd2a1') },
+  { weight: 0.10, color: new THREE.Color('#ffb380') }
 ];
 
 const StarVertexShader = `
@@ -31,6 +29,8 @@ const StarVertexShader = `
 
   uniform float uCurrentTime;
   uniform float uExposure;
+  uniform float uLensingIntensity;
+  uniform vec3 uBlackHolePos;
 
   varying vec3 vColor;
   varying float vSize;
@@ -46,13 +46,37 @@ const StarVertexShader = `
       alpha = max(0.0, 1.0 - (uCurrentTime - aExtinction) / 3.0);
     }
 
-    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    vec3 currentPos = position;
+
+    // Relativistic Gravitational Lensing (Einstein light deflection)
+    if (uLensingIntensity > 0.001) {
+      vec3 toBH = uBlackHolePos - position;
+      float distToBH = length(toBH);
+      vec3 bhDir = normalize(uBlackHolePos);
+      vec3 starDir = normalize(position);
+      
+      float angularSep = acos(clamp(dot(bhDir, starDir), -1.0, 1.0));
+      // Einstein deflection: alpha_deflect = 4GM / (c^2 * b)
+      if (angularSep < 0.85) {
+        float b = max(0.04, angularSep);
+        float deflection = (0.09 / b) * uLensingIntensity;
+        // Tangential displacement vector perpendicular to black hole axis
+        vec3 tangent = normalize(starDir - bhDir * dot(starDir, bhDir));
+        vec3 deflectedDir = normalize(starDir + tangent * deflection);
+        currentPos = deflectedDir * length(position);
+        
+        // Stars falling directly inside the event horizon shadow are completely occluded
+        if (angularSep < 0.05 * uLensingIntensity) {
+          alpha = 0.0;
+        }
+      }
+    }
+
+    vec4 mvPosition = modelViewMatrix * vec4(currentPos, 1.0);
     gl_Position = projectionMatrix * mvPosition;
 
-    // Projected physical size on sensor modulated by exposure
     float projSize = aSize * (900.0 / -mvPosition.z) * sqrt(uExposure);
 
-    // Dynamic exposure adaptation for starfield visibility
     if (projSize < 1.2) {
       vAlpha = alpha * clamp(projSize / 1.2, 0.2, 1.0) * uExposure;
       gl_PointSize = 1.2;
@@ -75,16 +99,13 @@ const StarFragmentShader = `
     float dist = length(coord) * 2.0;
     if (dist > 1.0) discard;
 
-    // Analytic derivative anti-aliasing
     float delta = fwidth(dist);
     float edgeAA = 1.0 - smoothstep(1.0 - max(delta * 1.5, 0.08), 1.0, dist);
 
-    // Gaussian core + optical halo profile
     float core = exp(-dist * dist * 10.0);
     float halo = exp(-dist * 3.5) * 0.4;
     float profile = core + halo;
 
-    // 4-point diffraction spike on bright stars
     float spike = 0.0;
     if (vSize > 3.2) {
       float hSpike = max(0.0, 1.0 - abs(coord.y) * 18.0) * max(0.0, 1.0 - abs(coord.x) * 2.5);
@@ -168,7 +189,9 @@ export function DistantCascadingStars() {
 
   const uniforms = useMemo(() => ({
     uCurrentTime: { value: 0 },
-    uExposure: { value: 1.0 }
+    uExposure: { value: 1.0 },
+    uLensingIntensity: { value: 0 },
+    uBlackHolePos: { value: new THREE.Vector3(0, 0, -180) }
   }), []);
 
   useFrame(() => {
@@ -176,24 +199,27 @@ export function DistantCascadingStars() {
     const currentTime = useTimelineStore.getState().currentTime;
     materialRef.current.uniforms.uCurrentTime.value = currentTime;
 
-    // Optical exposure integration:
-    // Normal solar state: bright sun suppresses faint stars (exposure = 0.8)
-    // Collapse flash (52s - 58s): blinding solar collapse suppresses stars heavily (exposure = 0.25)
-    // Post-collapse singularity (58s - 78s): dark void allows camera/eye to reveal faint stars (exposure = 1.35)
     let exposure = 0.8;
+    let lensing = 0;
+
     if (currentTime < 52.0) {
       exposure = 0.8;
+      lensing = 0;
     } else if (currentTime >= 52.0 && currentTime < 58.0) {
       const flash = (currentTime - 52.0) / 6.0;
       exposure = THREE.MathUtils.lerp(0.8, 0.25, Math.sin(flash * Math.PI));
+      lensing = flash * 0.4;
     } else if (currentTime >= 58.0 && currentTime < 78.0) {
       const t = (currentTime - 58.0) / 20.0;
       exposure = THREE.MathUtils.lerp(0.5, 1.35, t);
+      lensing = THREE.MathUtils.lerp(0.4, 1.0, t);
     } else {
       exposure = 1.35;
+      lensing = 1.0;
     }
 
     materialRef.current.uniforms.uExposure.value = exposure;
+    materialRef.current.uniforms.uLensingIntensity.value = lensing;
   });
 
   return (
