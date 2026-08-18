@@ -6,6 +6,7 @@ import { useTimelineStore } from '../../store/timelineStore';
 import { TacticalConsole } from './TacticalConsole';
 import { NPCs } from './NPCs';
 import { DebrisField } from './DebrisField';
+import { StationExterior } from './StationExterior';
 
 export function StationInterior() {
   const breachRef = useRef<THREE.Group>(null);
@@ -248,6 +249,9 @@ export function StationInterior() {
 
       {/* Zero-G Floating Physical Debris during Breach */}
       <DebrisField />
+
+      {/* Hero-Tier Exterior Megastructure Architecture */}
+      <StationExterior />
     </group>
   );
 }
