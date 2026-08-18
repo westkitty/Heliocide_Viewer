@@ -26,6 +26,7 @@ const PlanetFragmentShader = `
   uniform vec3 uStarPosition;
   uniform float uCurrentTime;
   uniform float uCityBlackout;
+  uniform float uCloudOffset;
 
   varying vec2 vUv;
   varying vec3 vNormal;
@@ -73,9 +74,15 @@ const PlanetFragmentShader = `
     float dayFactor = smoothstep(-0.12, 0.22, rawNdotL);
     float nightFactor = 1.0 - dayFactor;
 
+    // Sample terrain & night lights
     vec4 surface = texture2D(uSurfaceMap, vUv);
     vec4 night = texture2D(uNightMap, vUv);
-    vec4 clouds = texture2D(uCloudMap, vUv);
+
+    // Altitude-dependent cloud drop-shadow calculation
+    vec2 cloudUv = vec2(vUv.x + uCloudOffset, vUv.y);
+    vec2 shadowUv = cloudUv + normalize(L.xy) * 0.008;
+    vec4 shadowCloud = texture2D(uCloudMap, shadowUv);
+    float cloudShadow = 1.0 - shadowCloud.a * 0.65 * dayFactor;
 
     vec3 albedo = surface.rgb;
     float roughness = clamp(surface.a, 0.04, 0.95);
@@ -94,9 +101,7 @@ const PlanetFragmentShader = `
     float denominator = 4.0 * NdotV * NdotL + 0.0001;
     vec3 specularBRDF = numerator / denominator;
 
-    // Atmospheric extinction & Sunset Redding along the terminator
-    // When light passes through thick atmosphere at glancing angles, blue scatters out, leaving crimson sunset light
-    float opticalDepth = clamp(1.0 - rawNdotL, 0.0, 1.0);
+    // Atmospheric extinction & Sunset reddening
     vec3 middaySun = vec3(1.0, 0.96, 0.90) * 2.8;
     vec3 sunsetSun = vec3(1.0, 0.38, 0.10) * 2.2;
     float sunsetFactor = smoothstep(-0.08, 0.25, rawNdotL) * (1.0 - smoothstep(0.15, 0.65, rawNdotL));
@@ -105,9 +110,9 @@ const PlanetFragmentShader = `
     vec3 ambientSpace = vec3(0.012, 0.016, 0.025);
 
     vec3 diffuse = (kD * albedo / PI);
-    vec3 directLight = (diffuse + specularBRDF) * incidentSunColor * NdotL;
+    vec3 directLight = (diffuse + specularBRDF) * incidentSunColor * NdotL * cloudShadow;
 
-    vec3 dayLit = mix(directLight, clouds.rgb * (NdotL * incidentSunColor + ambientSpace), clouds.a * 0.78);
+    vec3 dayLit = directLight;
     vec3 nightLit = night.rgb * (1.0 - uCityBlackout) * nightFactor * 2.5 + ambientSpace;
 
     // Rayleigh scattering surface haze
@@ -120,6 +125,61 @@ const PlanetFragmentShader = `
     vec3 finalColor = mix(nightLit, dayLit, dayFactor) + atmosGlow;
 
     gl_FragColor = vec4(finalColor, 1.0);
+  }
+`;
+
+const CloudVertexShader = `
+  varying vec2 vUv;
+  varying vec3 vWorldPosition;
+  varying vec3 vWorldNormal;
+
+  void main() {
+    vUv = uv;
+    vec4 worldPos = modelMatrix * vec4(position, 1.0);
+    vWorldPosition = worldPos.xyz;
+    vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
+    gl_Position = projectionMatrix * viewMatrix * worldPos;
+  }
+`;
+
+const CloudFragmentShader = `
+  uniform sampler2D uCloudMap;
+  uniform vec3 uStarPosition;
+  uniform float uCloudOffset;
+
+  varying vec2 vUv;
+  varying vec3 vWorldPosition;
+  varying vec3 vWorldNormal;
+
+  void main() {
+    vec3 N = normalize(vWorldNormal);
+    vec3 L = normalize(uStarPosition - vWorldPosition);
+    vec3 V = normalize(cameraPosition - vWorldPosition);
+
+    vec2 animatedUv = vec2(vUv.x + uCloudOffset, vUv.y);
+    vec4 cloudSample = texture2D(uCloudMap, animatedUv);
+    if (cloudSample.a < 0.05) discard;
+
+    float rawNdotL = dot(N, L);
+    float NdotL = max(0.0, rawNdotL);
+    float dayFactor = smoothstep(-0.15, 0.25, rawNdotL);
+
+    // Forward scattering through cloud water droplets
+    float cosTheta = dot(V, L);
+    float forwardScatter = pow(max(0.0, cosTheta), 4.0) * 0.45;
+
+    vec3 middaySun = vec3(1.0, 0.98, 0.94) * 2.6;
+    vec3 sunsetSun = vec3(1.0, 0.45, 0.18) * 2.2;
+    float sunsetFactor = smoothstep(-0.1, 0.22, rawNdotL) * (1.0 - smoothstep(0.12, 0.6, rawNdotL));
+    vec3 sunLight = mix(middaySun, sunsetSun, sunsetFactor);
+
+    vec3 ambientGlow = vec3(0.08, 0.12, 0.22);
+    vec3 cloudLit = (NdotL + forwardScatter) * sunLight + ambientGlow;
+
+    vec3 finalColor = cloudSample.rgb * cloudLit;
+    float alpha = cloudSample.a * (dayFactor * 0.9 + 0.1);
+
+    gl_FragColor = vec4(finalColor, alpha);
   }
 `;
 
@@ -150,15 +210,12 @@ const AtmosphereFragmentShader = `
     float NdotV = dot(N, V);
     float rim = 1.0 - max(0.0, NdotV);
 
-    // Rayleigh phase function P_R(theta) = 0.75 * (1.0 + cos^2(theta))
     float cosTheta = dot(-V, L);
     float rayleighPhase = 0.75 * (1.0 + cosTheta * cosTheta);
 
-    // Mie forward scattering peak
     float g = 0.76;
     float miePhase = (1.0 - g * g) / (4.0 * 3.14159 * pow(max(0.01, 1.0 + g * g - 2.0 * g * cosTheta), 1.5));
 
-    // Sunset color shift along terminator
     float dayFactor = smoothstep(-0.25, 0.35, NdotL);
     float sunsetFactor = smoothstep(-0.2, 0.25, NdotL) * (1.0 - smoothstep(0.15, 0.6, NdotL));
 
@@ -222,7 +279,9 @@ function createPerlin2D() {
 
 export function InhabitedPlanet() {
   const planetGroupRef = useRef<THREE.Group>(null);
+  const cloudMeshRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
+  const cloudMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const atmosMaterialRef = useRef<THREE.ShaderMaterial>(null);
 
   const { planetTexture, nightTexture, cloudTexture } = useMemo(() => {
@@ -340,12 +399,17 @@ export function InhabitedPlanet() {
           nData[idx + 3] = 255;
         }
 
-        const cloudNoise = fbm(sx * 1.5 + lon * 0.5, sy * 1.5, 5);
-        const cloudDensity = smoothstep(0.08, 0.45, cloudNoise);
+        // Swirling Coriolis Weather Formations with Cyclonic Spirals
+        const coriolisShear = Math.sin(lat * 3.0) * 0.8;
+        const cloudNoise1 = fbm(sx * 1.8 + coriolisShear, sy * 1.8 + sz * 1.2, 5);
+        const cycloneCore = Math.pow(Math.abs(fbm(sx * 3.5 + 40.0, sy * 3.5 + sz * 2.0, 4)), 1.5);
+        const cloudTotal = cloudNoise1 * 0.75 + cycloneCore * 0.4;
+        const cloudDensity = smoothstep(0.12, 0.42, cloudTotal);
+
         cData[idx] = 255;
         cData[idx + 1] = 255;
         cData[idx + 2] = 255;
-        cData[idx + 3] = Math.floor(cloudDensity * 210);
+        cData[idx + 3] = Math.floor(cloudDensity * 225);
       }
     }
 
@@ -370,17 +434,28 @@ export function InhabitedPlanet() {
     uCloudMap: { value: cloudTexture },
     uStarPosition: { value: new THREE.Vector3(0, 0, -180) },
     uCurrentTime: { value: 0 },
-    uCityBlackout: { value: 0 }
+    uCityBlackout: { value: 0 },
+    uCloudOffset: { value: 0 }
   }), [planetTexture, nightTexture, cloudTexture]);
+
+  const cloudUniforms = useMemo(() => ({
+    uCloudMap: { value: cloudTexture },
+    uStarPosition: { value: new THREE.Vector3(0, 0, -180) },
+    uCloudOffset: { value: 0 }
+  }), [cloudTexture]);
 
   const atmosUniforms = useMemo(() => ({
     uStarPosition: { value: new THREE.Vector3(0, 0, -180) }
   }), []);
 
   useFrame((_, delta) => {
-    if (!planetGroupRef.current || !materialRef.current) return;
+    if (!planetGroupRef.current || !materialRef.current || !cloudMaterialRef.current) return;
 
     planetGroupRef.current.rotation.y += delta * 0.015;
+
+    // Clouds advect faster due to planetary trade winds
+    uniforms.uCloudOffset.value += delta * 0.008;
+    cloudUniforms.uCloudOffset.value += delta * 0.008;
 
     const currentTime = useTimelineStore.getState().currentTime;
     materialRef.current.uniforms.uCurrentTime.value = currentTime;
@@ -409,7 +484,7 @@ export function InhabitedPlanet() {
 
   return (
     <group ref={planetGroupRef} position={[65, -25, -120]}>
-      {/* Complete Physically-Shaded Inhabited Planet with Cook-Torrance Microfacet PBR */}
+      {/* 1. Physically-Shaded Surface with Terrain Elevation & Cloud Drop-Shadows */}
       <mesh>
         <sphereGeometry args={[24, 64, 64]} />
         <shaderMaterial
@@ -420,7 +495,20 @@ export function InhabitedPlanet() {
         />
       </mesh>
 
-      {/* Volumetric Rayleigh & Mie Atmospheric Scattering Envelope Shell */}
+      {/* 2. Independent Advecting Cloud Layer with Forward Scattering */}
+      <mesh ref={cloudMeshRef}>
+        <sphereGeometry args={[24.25, 64, 64]} />
+        <shaderMaterial
+          ref={cloudMaterialRef}
+          vertexShader={CloudVertexShader}
+          fragmentShader={CloudFragmentShader}
+          uniforms={cloudUniforms}
+          transparent
+          depthWrite={false}
+        />
+      </mesh>
+
+      {/* 3. Volumetric Rayleigh & Mie Atmospheric Scattering Envelope Shell */}
       <mesh>
         <sphereGeometry args={[24.8, 64, 64]} />
         <shaderMaterial
