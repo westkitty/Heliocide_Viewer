@@ -21,13 +21,11 @@ export function CameraManager() {
   const currentVelocity = useRef(new THREE.Vector3());
   const walkDistance = useRef(0);
   const smoothedLookAt = useRef(new THREE.Vector3(0, 0, -100));
-  const initializedLook = useRef(false);
-
   useEffect(() => {
-    if (!initializedLook.current && cameraMode === 'FIRST_PERSON') {
+    if (cameraMode === 'FIRST_PERSON') {
+      playerPos.current.set(0, 1.7, 2.0);
       camera.position.set(0, 1.7, 2.0);
       camera.lookAt(0, 1.7, -100);
-      initializedLook.current = true;
     }
   }, [cameraMode, camera]);
 
@@ -186,10 +184,6 @@ export function CameraManager() {
         playerPos.current.y + bobY + swayY,
         playerPos.current.z
       );
-
-      if (typeof document !== 'undefined' && !document.pointerLockElement) {
-        camera.lookAt(0, 1.7, -100);
-      }
     } else if (cameraMode === 'CINEMATIC') {
       // 5. Authored Cinematic Flight Arc & Damped LookAt
       const t = Math.min(1.0, (currentTime - 122.0) / 16.0);

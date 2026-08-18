@@ -147,11 +147,17 @@ export function StationInterior() {
           <boxGeometry args={[0.3, 7.5, 0.5]} />
           <meshStandardMaterial color="#334155" metalness={0.95} roughness={0.15} />
         </mesh>
+        {/* Low Safety Railing Barrier along Window Sill */}
+        <mesh position={[0, -3.2, 0.4]}>
+          <boxGeometry args={[16, 0.4, 0.2]} />
+          <meshStandardMaterial color="#475569" metalness={0.9} roughness={0.2} />
+        </mesh>
+
         {/* Custom Physical Reinforced Observation Glass */}
         <ObservationGlass />
       </group>
 
-      {/* 3. Ceiling with Reinforced Structural Trusses & Conduit Lines */}
+      {/* 3. Ceiling with Reinforced Structural Trusses & Colored Utility Conduits */}
       <mesh position={[0, 7.0, 0]}>
         <boxGeometry args={[18, 0.2, 16]} />
         <meshStandardMaterial color="#0b0f19" metalness={0.7} roughness={0.4} />
@@ -163,19 +169,25 @@ export function StationInterior() {
             <boxGeometry args={[17.8, 0.35, 0.45]} />
             <meshStandardMaterial color="#1e293b" metalness={0.9} roughness={0.2} />
           </mesh>
-          {/* Conduit Utility Lines */}
-          <mesh position={[0, -0.22, 0.15]} rotation={[0, 0, Math.PI / 2]}>
+          {/* Conduit Line 1: Primary Coolant (Cyan) */}
+          <mesh position={[0, -0.22, 0.18]} rotation={[0, 0, Math.PI / 2]}>
             <cylinderGeometry args={[0.04, 0.04, 17.6, 8]} />
-            <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.3} />
+            <meshStandardMaterial color="#38bdf8" metalness={0.7} roughness={0.3} />
           </mesh>
-          <mesh position={[0, -0.22, -0.15]} rotation={[0, 0, Math.PI / 2]}>
+          {/* Conduit Line 2: Life Support Atmosphere (Green) */}
+          <mesh position={[0, -0.22, 0.0]} rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.035, 0.035, 17.6, 8]} />
+            <meshStandardMaterial color="#10b981" metalness={0.6} roughness={0.4} />
+          </mesh>
+          {/* Conduit Line 3: High-Voltage Magnetics (Amber) */}
+          <mesh position={[0, -0.22, -0.18]} rotation={[0, 0, Math.PI / 2]}>
             <cylinderGeometry args={[0.03, 0.03, 17.6, 8]} />
-            <meshStandardMaterial color="#f59e0b" metalness={0.6} roughness={0.4} />
+            <meshStandardMaterial color="#f59e0b" metalness={0.7} roughness={0.3} />
           </mesh>
         </group>
       ))}
 
-      {/* 4. Left Wall with Diagnostic Monitors & Composite Paneling */}
+      {/* 4. Left Wall with Diagnostic Monitors, Air Quality Sensor, and Stencils */}
       <mesh position={[-8.9, 3.5, 0]}>
         <boxGeometry args={[0.2, 7.0, 16]} />
         <meshStandardMaterial color="#0f172a" metalness={0.6} roughness={0.4} />
@@ -196,11 +208,37 @@ export function StationInterior() {
         </Text>
       </group>
 
-      {/* 5. Right Wall with Structural Breach Bulkhead */}
+      {/* Stamped Bulkhead Serial Decal on Left Wall */}
+      <Text
+        position={[-8.7, 5.2, 2.0]}
+        rotation={[0, Math.PI / 2, 0]}
+        fontSize={0.2}
+        color="#64748b"
+      >
+        SECTOR 04 // OBS-DECK // HV-88
+      </Text>
+
+      {/* 5. Right Wall with Structural Breach Bulkhead & Emergency Locker */}
       <mesh position={[8.9, 3.5, -4]}>
         <boxGeometry args={[0.2, 7.0, 8]} />
         <meshStandardMaterial color="#0f172a" metalness={0.6} roughness={0.4} />
       </mesh>
+
+      {/* Emergency O2 Breathing Apparatus Locker */}
+      <group position={[8.7, 2.5, -3.5]}>
+        <mesh>
+          <boxGeometry args={[0.25, 2.0, 1.2]} />
+          <meshStandardMaterial color="#1e293b" metalness={0.8} roughness={0.3} />
+        </mesh>
+        <Text
+          position={[-0.15, 0.6, 0]}
+          rotation={[0, -Math.PI / 2, 0]}
+          fontSize={0.12}
+          color="#10b981"
+        >
+          EMERGENCY O2
+        </Text>
+      </group>
 
       {/* Dynamic Rupture Bulkhead Section */}
       <group ref={breachRef} position={[8.8, 3.5, 3]}>
