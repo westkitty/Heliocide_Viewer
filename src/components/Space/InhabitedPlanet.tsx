@@ -34,7 +34,6 @@ const PlanetFragmentShader = `
 
   const float PI = 3.14159265359;
 
-  // GGX Normal Distribution Function
   float D_GGX(float NdotH, float roughness) {
     float a = roughness * roughness;
     float a2 = a * a;
@@ -45,7 +44,6 @@ const PlanetFragmentShader = `
     return num / max(denom, 0.0001);
   }
 
-  // Smith GGX Geometric Shadowing
   float G_SchlickSmithGGX(float NdotL, float NdotV, float roughness) {
     float r = (roughness + 1.0);
     float k = (r * r) / 8.0;
@@ -56,7 +54,6 @@ const PlanetFragmentShader = `
     return (numL / max(denomL, 0.0001)) * (numV / max(denomV, 0.0001));
   }
 
-  // Schlick Fresnel
   vec3 F_Schlick(float cosTheta, vec3 F0) {
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
   }
@@ -67,15 +64,15 @@ const PlanetFragmentShader = `
     vec3 V = normalize(cameraPosition - vWorldPosition);
     vec3 H = normalize(L + V);
 
-    float NdotL = max(0.0, dot(N, L));
+    float rawNdotL = dot(N, L);
+    float NdotL = max(0.0, rawNdotL);
     float NdotV = max(0.001, dot(N, V));
     float NdotH = max(0.0, dot(N, H));
     float VdotH = max(0.0, dot(V, H));
 
-    float dayFactor = smoothstep(-0.12, 0.22, dot(N, L));
+    float dayFactor = smoothstep(-0.12, 0.22, rawNdotL);
     float nightFactor = 1.0 - dayFactor;
 
-    // Sample textures: surface.a stores physical roughness map
     vec4 surface = texture2D(uSurfaceMap, vUv);
     vec4 night = texture2D(uNightMap, vUv);
     vec4 clouds = texture2D(uCloudMap, vUv);
@@ -83,42 +80,99 @@ const PlanetFragmentShader = `
     vec3 albedo = surface.rgb;
     float roughness = clamp(surface.a, 0.04, 0.95);
 
-    // Differentiate ocean vs landmass
     bool isOcean = roughness < 0.15;
     vec3 F0 = isOcean ? vec3(0.02) : vec3(0.04);
 
-    // Cook-Torrance Microfacet Specular BRDF
     float NDF = D_GGX(NdotH, roughness);
     float G = G_SchlickSmithGGX(NdotL, NdotV, roughness);
     vec3 F = F_Schlick(VdotH, F0);
 
     vec3 kS = F;
-    vec3 kD = (vec3(1.0) - kS) * (isOcean ? 0.2 : 1.0); // Ocean absorbs deep light
+    vec3 kD = (vec3(1.0) - kS) * (isOcean ? 0.2 : 1.0);
 
     vec3 numerator = NDF * G * F;
     float denominator = 4.0 * NdotV * NdotL + 0.0001;
     vec3 specularBRDF = numerator / denominator;
 
-    // Direct warm solar radiance
-    vec3 sunRadiance = vec3(1.0, 0.96, 0.90) * 2.8;
+    // Atmospheric extinction & Sunset Redding along the terminator
+    // When light passes through thick atmosphere at glancing angles, blue scatters out, leaving crimson sunset light
+    float opticalDepth = clamp(1.0 - rawNdotL, 0.0, 1.0);
+    vec3 middaySun = vec3(1.0, 0.96, 0.90) * 2.8;
+    vec3 sunsetSun = vec3(1.0, 0.38, 0.10) * 2.2;
+    float sunsetFactor = smoothstep(-0.08, 0.25, rawNdotL) * (1.0 - smoothstep(0.15, 0.65, rawNdotL));
+    vec3 incidentSunColor = mix(middaySun, sunsetSun, sunsetFactor);
+
     vec3 ambientSpace = vec3(0.012, 0.016, 0.025);
 
     vec3 diffuse = (kD * albedo / PI);
-    vec3 directLight = (diffuse + specularBRDF) * sunRadiance * NdotL;
+    vec3 directLight = (diffuse + specularBRDF) * incidentSunColor * NdotL;
 
-    // Cloud shadow & overlay
-    vec3 dayLit = mix(directLight, clouds.rgb * (NdotL * sunRadiance + ambientSpace), clouds.a * 0.78);
-
-    // Night hemisphere: City lights clustered along tectonic coastlines
+    vec3 dayLit = mix(directLight, clouds.rgb * (NdotL * incidentSunColor + ambientSpace), clouds.a * 0.78);
     vec3 nightLit = night.rgb * (1.0 - uCityBlackout) * nightFactor * 2.5 + ambientSpace;
 
-    // Atmospheric Rayleigh scattering rim
+    // Rayleigh scattering surface haze
     float rim = 1.0 - max(0.0, dot(N, V));
-    vec3 atmosGlow = vec3(0.2, 0.55, 0.95) * pow(rim, 3.2) * (dayFactor * 1.6 + 0.12);
+    vec3 rayleighSky = vec3(0.18, 0.58, 1.0);
+    vec3 sunsetRim = vec3(1.0, 0.45, 0.15);
+    vec3 atmosColor = mix(rayleighSky, sunsetRim, sunsetFactor);
+    vec3 atmosGlow = atmosColor * pow(rim, 3.2) * (dayFactor * 1.8 + 0.15);
 
     vec3 finalColor = mix(nightLit, dayLit, dayFactor) + atmosGlow;
 
     gl_FragColor = vec4(finalColor, 1.0);
+  }
+`;
+
+const AtmosphereVertexShader = `
+  varying vec3 vWorldPosition;
+  varying vec3 vWorldNormal;
+
+  void main() {
+    vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
+    vec4 worldPos = modelMatrix * vec4(position, 1.0);
+    vWorldPosition = worldPos.xyz;
+    gl_Position = projectionMatrix * viewMatrix * worldPos;
+  }
+`;
+
+const AtmosphereFragmentShader = `
+  uniform vec3 uStarPosition;
+
+  varying vec3 vWorldPosition;
+  varying vec3 vWorldNormal;
+
+  void main() {
+    vec3 N = normalize(vWorldNormal);
+    vec3 L = normalize(uStarPosition - vWorldPosition);
+    vec3 V = normalize(cameraPosition - vWorldPosition);
+
+    float NdotL = dot(N, L);
+    float NdotV = dot(N, V);
+    float rim = 1.0 - max(0.0, NdotV);
+
+    // Rayleigh phase function P_R(theta) = 0.75 * (1.0 + cos^2(theta))
+    float cosTheta = dot(-V, L);
+    float rayleighPhase = 0.75 * (1.0 + cosTheta * cosTheta);
+
+    // Mie forward scattering peak
+    float g = 0.76;
+    float miePhase = (1.0 - g * g) / (4.0 * 3.14159 * pow(max(0.01, 1.0 + g * g - 2.0 * g * cosTheta), 1.5));
+
+    // Sunset color shift along terminator
+    float dayFactor = smoothstep(-0.25, 0.35, NdotL);
+    float sunsetFactor = smoothstep(-0.2, 0.25, NdotL) * (1.0 - smoothstep(0.15, 0.6, NdotL));
+
+    vec3 rayleighColor = vec3(0.15, 0.55, 1.0);
+    vec3 sunsetColor = vec3(1.0, 0.42, 0.12);
+    vec3 atmosBase = mix(rayleighColor, sunsetColor, sunsetFactor);
+
+    float intensity = pow(rim, 3.8) * (rayleighPhase * 1.2 + miePhase * 0.8) * (dayFactor * 2.2 + 0.1);
+    vec3 finalColor = atmosBase * intensity;
+
+    float alpha = clamp(pow(rim, 2.5) * (dayFactor * 0.95 + 0.08), 0.0, 1.0);
+    if (alpha < 0.005) discard;
+
+    gl_FragColor = vec4(finalColor, alpha);
   }
 `;
 
@@ -169,6 +223,7 @@ function createPerlin2D() {
 export function InhabitedPlanet() {
   const planetGroupRef = useRef<THREE.Group>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
+  const atmosMaterialRef = useRef<THREE.ShaderMaterial>(null);
 
   const { planetTexture, nightTexture, cloudTexture } = useMemo(() => {
     const width = 1024;
@@ -230,36 +285,29 @@ export function InhabitedPlanet() {
         let cityGlow = 0;
 
         if (totalElev < -0.15) {
-          // Deep Ocean
           r = 6; g = 22; b = 58;
-          roughness = 0.04; // Mirror-smooth water
+          roughness = 0.04;
         } else if (totalElev < 0.0) {
-          // Continental Shelf
           const depthT = (totalElev + 0.15) / 0.15;
           r = Math.floor(THREE.MathUtils.lerp(6, 18, depthT));
           g = Math.floor(THREE.MathUtils.lerp(22, 68, depthT));
           b = Math.floor(THREE.MathUtils.lerp(58, 110, depthT));
           roughness = 0.06;
         } else if (absLat > 1.25) {
-          // Polar Ice Sheets
           r = 230; g = 242; b = 255;
           roughness = 0.22;
         } else if (totalElev < 0.04) {
-          // Coastal Beaches and Lowlands
           r = 42; g = 98; b = 54;
           roughness = 0.72;
           cityGlow = Math.max(0, fbm(sx * 8.0, sy * 8.0, 4) * 255);
         } else if (totalElev < 0.22) {
-          // Plains & Forests
           r = 30; g = 82; b = 38;
           roughness = 0.85;
           cityGlow = Math.max(0, fbm(sx * 6.0, sy * 6.0, 4) * 180);
         } else if (totalElev < 0.38) {
-          // Arid Plateaus
           r = 142; g = 118; b = 78;
           roughness = 0.92;
         } else {
-          // Alpine Mountain Peaks
           const peakT = (totalElev - 0.38) / 0.3;
           r = Math.floor(THREE.MathUtils.lerp(120, 240, peakT));
           g = Math.floor(THREE.MathUtils.lerp(120, 245, peakT));
@@ -270,9 +318,8 @@ export function InhabitedPlanet() {
         pData[idx] = r;
         pData[idx + 1] = g;
         pData[idx + 2] = b;
-        pData[idx + 3] = Math.floor(roughness * 255); // Alpha channel stores roughness
+        pData[idx + 3] = Math.floor(roughness * 255);
 
-        // Night City Lights
         if (cityGlow > 70 && totalElev >= 0.0 && absLat < 1.2) {
           const isNode = fbm(sx * 15.0, sy * 15.0, 2) > 0.35;
           if (isNode) {
@@ -293,7 +340,6 @@ export function InhabitedPlanet() {
           nData[idx + 3] = 255;
         }
 
-        // Swirling Coriolis Cloud Bands
         const cloudNoise = fbm(sx * 1.5 + lon * 0.5, sy * 1.5, 5);
         const cloudDensity = smoothstep(0.08, 0.45, cloudNoise);
         cData[idx] = 255;
@@ -326,6 +372,10 @@ export function InhabitedPlanet() {
     uCurrentTime: { value: 0 },
     uCityBlackout: { value: 0 }
   }), [planetTexture, nightTexture, cloudTexture]);
+
+  const atmosUniforms = useMemo(() => ({
+    uStarPosition: { value: new THREE.Vector3(0, 0, -180) }
+  }), []);
 
   useFrame((_, delta) => {
     if (!planetGroupRef.current || !materialRef.current) return;
@@ -367,6 +417,21 @@ export function InhabitedPlanet() {
           vertexShader={PlanetVertexShader}
           fragmentShader={PlanetFragmentShader}
           uniforms={uniforms}
+        />
+      </mesh>
+
+      {/* Volumetric Rayleigh & Mie Atmospheric Scattering Envelope Shell */}
+      <mesh>
+        <sphereGeometry args={[24.8, 64, 64]} />
+        <shaderMaterial
+          ref={atmosMaterialRef}
+          vertexShader={AtmosphereVertexShader}
+          fragmentShader={AtmosphereFragmentShader}
+          uniforms={atmosUniforms}
+          transparent
+          side={THREE.BackSide}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
         />
       </mesh>
     </group>

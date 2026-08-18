@@ -33,7 +33,7 @@
 | **20** | Post-Collapse System Lighting | Pending | D_COLLAPSE / E_BREACH | ACCEPTED | 31 -> 40 | Dramatic stellar light loss, localized station emergency lighting, and dark space |
 | **21** | Real Planetary Topology | Pending | A_NORMAL | ACCEPTED | 30 -> 40 | Multi-scale fractal elevation, continental coastlines, and tectonic geography |
 | **22** | Planetary PBR Surface | Pending | A_NORMAL | ACCEPTED | 31 -> 40 | Glancing specular ocean response, mountain roughness, and land albedo maps |
-| **23** | Atmospheric Scattering | Pending | A_NORMAL | Queued | - | Rayleigh/Mie atmospheric limb glow and realistic terminator scattering |
+| **23** | Atmospheric Scattering | Pending | A_NORMAL | ACCEPTED | 32 -> 40 | Rayleigh/Mie atmospheric limb glow and realistic terminator scattering |
 | **24** | Realistic Cloud System | Pending | A_NORMAL | Queued | - | Multi-layered advecting weather formations with altitude shadowing |
 | **25** | Geographic City-Light Distribution | Pending | A_NORMAL | Queued | - | Realistic clustered urban networks restricted to coastlines and fertile landmasses |
 | **26** | Day/Night Terminator | Pending | A_NORMAL | Queued | - | Physically accurate star-oriented terminator and nightside city light activation |
