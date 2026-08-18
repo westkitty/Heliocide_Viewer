@@ -20,7 +20,7 @@
 | **07** | Replace Physical Siege-Wall Dodecahedron | Pending | F_SIEGE_WALL | ACCEPTED | 20 -> 38 | Replace geometric dodecahedron with sky-space angular extinction mask |
 | **08** | Organic Siege-Wall Propagation Front | Pending | F_SIEGE_WALL | ACCEPTED | 29 -> 38 | Layered multi-scale causal boundary erasing cosmos without polygon edges |
 | **09** | Realistic Stellar Photosphere | Pending | A_NORMAL | ACCEPTED | 28 -> 39 | Multi-scale granulation, limb darkening, dynamic convection cells, and realistic heat |
-| **10** | Corona and Stellar Prominences | Pending | A_NORMAL | Queued | - | Volumetric chromosphere, solar filaments, and scale-dependent luminous falloff |
+| **10** | Corona and Stellar Prominences | Pending | A_NORMAL | ACCEPTED | 31 -> 40 | Volumetric chromosphere, solar filaments, and scale-dependent luminous falloff |
 | **11** | Stellar Illumination of the System | Pending | A_NORMAL | Queued | - | Coherent incident light, directional vectors, and planetary shadows |
 | **12** | Physically Legible Collapse Thermodynamics | Pending | D_COLLAPSE | Queued | - | Progressive gravitational contraction, temperature shift, and blue-shifted radiation |
 | **13** | Collapse Shock / Mass-Ejection Event | Pending | D_COLLAPSE | Queued | - | Relativistic shockwave ring and directional ejecta particulate |
