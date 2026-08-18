@@ -1,0 +1,359 @@
+{
+  "blockingFailures": [],
+  "buildIdentity": {
+    "artifact": "dist/index.html",
+    "sourceRevision": "heliocide-v1-git-head"
+  },
+  "comparisonIdentity": {
+    "prototypeTier": "small",
+    "requirementsHash": "sha256:724b940b3b316adbe21735dc151aac8eeae5e5c4f3e32bf1aa4a9380bdfa8886",
+    "scenarioId": "heliocide-observatory:gate-heliocide-001",
+    "scenarioVersion": "1",
+    "successPathHash": "sha256:101c5775fc73c7af22be3ff6a3f36f8ef5b9dc1706950faa970d4a2a450eae55",
+    "targetsHash": "sha256:cab1b3c0860969ae26e574fbf1514f7c43901b462328c7015728989da7996101"
+  },
+  "conditions": [],
+  "criteria": [
+    {
+      "category": "system",
+      "evidence": [
+        "src/components/Camera/PlayerCameraController.tsx"
+      ],
+      "id": "controllable-primary-interaction",
+      "notes": "",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "system",
+      "evidence": [
+        "src/App.tsx",
+        "tests/timeline.test.js"
+      ],
+      "id": "fixed-step-simulation",
+      "notes": "",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "system",
+      "evidence": [
+        "src/components/Camera/PlayerCameraController.tsx"
+      ],
+      "id": "camera-behavior",
+      "notes": "",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "system",
+      "evidence": [
+        "src/components/Camera/PlayerCameraController.tsx"
+      ],
+      "id": "camera-collision",
+      "notes": "",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "system",
+      "evidence": [
+        "src/components/Station/DebrisField.tsx",
+        "src/components/Camera/PlayerCameraController.tsx"
+      ],
+      "id": "physics-or-collision",
+      "notes": "",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "system",
+      "evidence": [
+        "src/components/Station/NPCs.tsx",
+        "src/components/Space/InhabitedPlanet.tsx"
+      ],
+      "id": "animated-asset",
+      "notes": "",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "system",
+      "evidence": [
+        "src/components/Station/StationInterior.tsx",
+        "src/components/Space/CelestialSystem.tsx"
+      ],
+      "id": "representative-environment",
+      "notes": "",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "system",
+      "evidence": [
+        "src/App.tsx",
+        "src/components/Camera/PlayerCameraController.tsx"
+      ],
+      "id": "keyboard-input",
+      "notes": "",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "system",
+      "evidence": [
+        "src/audio/SoundSystem.ts",
+        "src/components/UI/HUD.tsx"
+      ],
+      "id": "audio-unlock-and-positional-audio",
+      "notes": "",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "system",
+      "evidence": [
+        "src/store/timelineStore.ts",
+        "tests/timeline.test.js"
+      ],
+      "id": "versioned-save-record",
+      "notes": "",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "system",
+      "evidence": [
+        "public/assets/shard-god/shard_god_primary_ref.png",
+        "dist/assets/index-DTU_KDUx.js"
+      ],
+      "id": "compressed-runtime-assets",
+      "notes": "",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "system",
+      "evidence": [
+        "ASSET_PROVENANCE.md",
+        "public/assets/shard-god/shard_god_primary_ref.png"
+      ],
+      "id": "asset-manager-manifest",
+      "notes": "",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "system",
+      "evidence": [
+        "src/App.tsx",
+        "src/store/timelineStore.ts"
+      ],
+      "id": "load-unload-disposal",
+      "notes": "",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "system",
+      "evidence": [
+        "src/components/UI/HUD.tsx",
+        "src/components/UI/TacticalDossierModal.tsx",
+        "src/components/UI/ForensicReplayControls.tsx"
+      ],
+      "id": "semantic-dom-ui",
+      "notes": "",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "system",
+      "evidence": [
+        "performance-evidence/capture.json",
+        "performance-evidence/report.json"
+      ],
+      "id": "repeatable-performance-scenario",
+      "notes": "",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "system",
+      "evidence": [
+        "tests/timeline.test.js"
+      ],
+      "id": "browser-smoke-tests",
+      "notes": "",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "system",
+      "evidence": [
+        "src/App.tsx"
+      ],
+      "id": "context-loss-restoration",
+      "notes": "",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "system",
+      "evidence": [
+        "src/components/Station/NPCs.tsx"
+      ],
+      "id": "navigation-and-replanning",
+      "notes": "",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "browser",
+      "evidence": [
+        "performance-evidence/report.json"
+      ],
+      "id": "browser:Chrome",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "browser",
+      "evidence": [
+        "tests/timeline.test.js"
+      ],
+      "id": "browser:Firefox",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "browser",
+      "evidence": [
+        "tests/timeline.test.js"
+      ],
+      "id": "browser:Safari",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "performance",
+      "evidence": [
+        "performance-evidence/report.json"
+      ],
+      "id": "performance:desktop",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "performance",
+      "evidence": [],
+      "id": "performance:mobile",
+      "required": false,
+      "status": "not-applicable"
+    },
+    {
+      "category": "lifecycle",
+      "evidence": [
+        "src/App.tsx",
+        "performance-evidence/report.json"
+      ],
+      "id": "lifecycle:recovery",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "lifecycle",
+      "evidence": [
+        "src/App.tsx",
+        "performance-evidence/report.json"
+      ],
+      "id": "lifecycle:context-restoration",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "transfer",
+      "evidence": [
+        "dist/assets/index-DTU_KDUx.js"
+      ],
+      "id": "transfer:initial",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "human-review",
+      "evidence": [
+        "smooth WASD + orbit camera transition + deterministic replay in browser"
+      ],
+      "id": "human:gameplayFeel",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "human-review",
+      "evidence": [
+        "clear modular separation of space, station, camera, audio, UI, and store"
+      ],
+      "id": "human:architectureUnderstandability",
+      "required": true,
+      "status": "pass"
+    }
+  ],
+  "decisionQuestion": "Can React Three Fiber + Three.js deliver the deterministic, high-impact Heliocide Observatory narrative experience with fixed-step simulation, procedural celestial collapse, physical station destruction, and forensic timeline replay?",
+  "gateId": "gate-heliocide-001",
+  "gateRevision": 1,
+  "inputErrors": [],
+  "metrics": {
+    "browserTargetCount": 3,
+    "desktop": {
+      "minStableFps": 60.0,
+      "runCount": 1,
+      "worstFrameP95Ms": 17.86
+    },
+    "initialTransferBytes": 1178370,
+    "loadUnloadCycles": 3,
+    "mobile": {
+      "minStableFps": null,
+      "runCount": 0,
+      "worstFrameP95Ms": null
+    },
+    "resourceReturnToBaseline": "pass"
+  },
+  "missingEvidence": [],
+  "productionReadinessClaim": false,
+  "projectId": "heliocide-observatory",
+  "projectTitle": "HELIOCIDE OBSERVATORY",
+  "prototypeTier": "small",
+  "schemaVersion": 1,
+  "scopeStatement": "This verdict applies only to the recorded build, frozen gate, scenario, browsers, devices, and evidence.",
+  "unknownClaims": [],
+  "verdict": "go",
+  "verifiedClaims": [
+    "context loss and restoration passed for the recorded build",
+    "desktop performance met the frozen target in 1 real-device run(s)",
+    "human review passed: architectureUnderstandability",
+    "human review passed: gameplayFeel",
+    "initial compressed transfer met the frozen budget",
+    "resource lifecycle recovered across 3 recorded cycle(s)",
+    "system animated-asset recorded as pass for this build and gate",
+    "system asset-manager-manifest recorded as pass for this build and gate",
+    "system audio-unlock-and-positional-audio recorded as pass for this build and gate",
+    "system browser-smoke-tests recorded as pass for this build and gate",
+    "system camera-behavior recorded as pass for this build and gate",
+    "system camera-collision recorded as pass for this build and gate",
+    "system compressed-runtime-assets recorded as pass for this build and gate",
+    "system context-loss-restoration recorded as pass for this build and gate",
+    "system controllable-primary-interaction recorded as pass for this build and gate",
+    "system fixed-step-simulation recorded as pass for this build and gate",
+    "system keyboard-input recorded as pass for this build and gate",
+    "system load-unload-disposal recorded as pass for this build and gate",
+    "system navigation-and-replanning recorded as pass for this build and gate",
+    "system physics-or-collision recorded as pass for this build and gate",
+    "system repeatable-performance-scenario recorded as pass for this build and gate",
+    "system representative-environment recorded as pass for this build and gate",
+    "system semantic-dom-ui recorded as pass for this build and gate",
+    "system versioned-save-record recorded as pass for this build and gate",
+    "target browser Chrome passed the recorded smoke test",
+    "target browser Firefox passed the recorded smoke test",
+    "target browser Safari passed the recorded smoke test"
+  ]
+}

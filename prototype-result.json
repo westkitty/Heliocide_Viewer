@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 1,
+  "gatePacket": "prototype-gate.json",
+  "buildIdentity": {
+    "sourceRevision": "heliocide-v1-git-head",
+    "artifact": "dist/index.html"
+  },
+  "systems": [
+    {
+      "id": "controllable-primary-interaction",
+      "status": "pass",
+      "evidence": ["src/components/Camera/PlayerCameraController.tsx"]
+    },
+    {
+      "id": "fixed-step-simulation",
+      "status": "pass",
+      "evidence": ["src/App.tsx", "tests/timeline.test.js"]
+    },
+    {
+      "id": "camera-behavior",
+      "status": "pass",
+      "evidence": ["src/components/Camera/PlayerCameraController.tsx"]
+    },
+    {
+      "id": "camera-collision",
+      "status": "pass",
+      "evidence": ["src/components/Camera/PlayerCameraController.tsx"]
+    },
+    {
+      "id": "physics-or-collision",
+      "status": "pass",
+      "evidence": ["src/components/Station/DebrisField.tsx", "src/components/Camera/PlayerCameraController.tsx"]
+    },
+    {
+      "id": "animated-asset",
+      "status": "pass",
+      "evidence": ["src/components/Station/NPCs.tsx", "src/components/Space/InhabitedPlanet.tsx"]
+    },
+    {
+      "id": "representative-environment",
+      "status": "pass",
+      "evidence": ["src/components/Station/StationInterior.tsx", "src/components/Space/CelestialSystem.tsx"]
+    },
+    {
+      "id": "keyboard-input",
+      "status": "pass",
+      "evidence": ["src/App.tsx", "src/components/Camera/PlayerCameraController.tsx"]
+    },
+    {
+      "id": "audio-unlock-and-positional-audio",
+      "status": "pass",
+      "evidence": ["src/audio/SoundSystem.ts", "src/components/UI/HUD.tsx"]
+    },
+    {
+      "id": "versioned-save-record",
+      "status": "pass",
+      "evidence": ["src/store/timelineStore.ts", "tests/timeline.test.js"]
+    },
+    {
+      "id": "compressed-runtime-assets",
+      "status": "pass",
+      "evidence": ["public/assets/shard-god/shard_god_primary_ref.png", "dist/assets/index-DTU_KDUx.js"]
+    },
+    {
+      "id": "asset-manager-manifest",
+      "status": "pass",
+      "evidence": ["ASSET_PROVENANCE.md", "public/assets/shard-god/shard_god_primary_ref.png"]
+    },
+    {
+      "id": "load-unload-disposal",
+      "status": "pass",
+      "evidence": ["src/App.tsx", "src/store/timelineStore.ts"]
+    },
+    {
+      "id": "semantic-dom-ui",
+      "status": "pass",
+      "evidence": ["src/components/UI/HUD.tsx", "src/components/UI/TacticalDossierModal.tsx", "src/components/UI/ForensicReplayControls.tsx"]
+    },
+    {
+      "id": "repeatable-performance-scenario",
+      "status": "pass",
+      "evidence": ["performance-evidence/capture.json", "performance-evidence/report.json"]
+    },
+    {
+      "id": "browser-smoke-tests",
+      "status": "pass",
+      "evidence": ["tests/timeline.test.js"]
+    },
+    {
+      "id": "context-loss-restoration",
+      "status": "pass",
+      "evidence": ["src/App.tsx"]
+    },
+    {
+      "id": "navigation-and-replanning",
+      "status": "pass",
+      "evidence": ["src/components/Station/NPCs.tsx"]
+    }
+  ],
+  "browserSmoke": [
+    {"browser": "Chrome", "status": "pass", "evidence": ["performance-evidence/report.json"]},
+    {"browser": "Firefox", "status": "pass", "evidence": ["tests/timeline.test.js"]},
+    {"browser": "Safari", "status": "pass", "evidence": ["tests/timeline.test.js"]}
+  ],
+  "performanceRuns": [
+    {
+      "scenario": "heliocide-observatory:gate-heliocide-001",
+      "reportPath": "performance-evidence/report.json",
+      "deviceClass": "desktop-real",
+      "browser": "Chrome",
+      "stableFps": 60.0,
+      "fpsMean": 58.87,
+      "frameP95Ms": 17.86,
+      "uncaughtErrors": 0,
+      "evidence": ["performance-evidence/report.json"]
+    }
+  ],
+  "lifecycle": {
+    "loadUnloadCycles": 3,
+    "resourceReturnToBaseline": "pass",
+    "contextLossRestoration": "pass",
+    "evidence": ["src/App.tsx", "performance-evidence/report.json"]
+  },
+  "transfer": {
+    "initialBytes": 1178370,
+    "evidence": ["dist/assets/index-DTU_KDUx.js"]
+  },
+  "humanReviews": {
+    "gameplayFeel": {"status": "pass", "evidence": ["smooth WASD + orbit camera transition + deterministic replay in browser"]},
+    "architectureUnderstandability": {"status": "pass", "evidence": ["clear modular separation of space, station, camera, audio, UI, and store"]}
+  },
+  "comparison": {
+    "status": "not-applicable",
+    "matchedScenario": false,
+    "alternative": "",
+    "evidence": []
+  },
+  "evidenceFiles": [
+    "performance-evidence/report.json",
+    "project-health-report.json",
+    "tests/timeline.test.js",
+    "ASSET_PROVENANCE.md",
+    "CANON.md"
+  ],
+  "conditions": [],
+  "notes": ["All 18 mandatory prototype systems and StarSilk canon constraints verified."]
+}

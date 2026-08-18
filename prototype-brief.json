@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "projectId": "heliocide-observatory",
+  "gateId": "gate-heliocide-001",
+  "projectTitle": "HELIOCIDE OBSERVATORY",
+  "decisionQuestion": "Can React Three Fiber + Three.js deliver the deterministic, high-impact Heliocide Observatory narrative experience with fixed-step simulation, procedural celestial collapse, physical station destruction, and forensic timeline replay?",
+  "projectClass": "browser-game",
+  "genre": "narrative sci-fi interactive 3D observatory experience",
+  "strategicWebAdvantages": [
+    "instant zero-install browser deployment",
+    "declarative UI and DOM accessibility overlay",
+    "flexible canvas/WebGL post-processing pipeline"
+  ],
+  "prototypeTier": "small",
+  "architectureCandidate": "react-three-fiber",
+  "rendererCandidate": "WebGLRenderer",
+  "successPath": [
+    "enter-station",
+    "interact-tactical-console",
+    "observe-npcs",
+    "aureal-gate-alert",
+    "shard-god-authority",
+    "heliocide-stellar-collapse",
+    "station-breach-cascade",
+    "siege-wall-starless-void",
+    "station-loss-containment",
+    "forensic-replay-scrub"
+  ],
+  "nonGoals": [
+    "galaxy-scale simulation",
+    "multiplayer backend",
+    "combat system",
+    "non-canon lattice in physical sky",
+    "procedural universe streaming"
+  ],
+  "targets": {
+    "desktopRequired": true,
+    "mobileRequired": false,
+    "gamepadRequired": false,
+    "touchRequired": false,
+    "contextLossRequired": true,
+    "navigationRequired": true,
+    "networkRequired": false,
+    "streamingRequired": false,
+    "webxrRequired": false,
+    "browsers": ["Chrome", "Firefox", "Safari"],
+    "desktopFpsTarget": 60,
+    "mobileFpsTarget": 30,
+    "initialTransferBytesMax": 26214400
+  },
+  "riskSignals": {
+    "contentScale": "small",
+    "aiComplexity": "low",
+    "editorCritical": false,
+    "nonProgrammerContentTeam": false,
+    "conventional2D": false,
+    "animationHeavy": false,
+    "largeWorld": false
+  },
+  "comparison": {
+    "required": false
+  }
+}

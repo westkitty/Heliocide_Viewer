@@ -1,0 +1,215 @@
+{
+  "architectureCandidate": "react-three-fiber",
+  "comparison": {
+    "alternative": "",
+    "required": false
+  },
+  "createdAt": "2026-08-18T18:58:14Z",
+  "decisionQuestion": "Can React Three Fiber + Three.js deliver the deterministic, high-impact Heliocide Observatory narrative experience with fixed-step simulation, procedural celestial collapse, physical station destruction, and forensic timeline replay?",
+  "gateId": "gate-heliocide-001",
+  "gateRevision": 1,
+  "gateStatus": "ready",
+  "genre": "narrative sci-fi interactive 3D observatory experience",
+  "nonGoals": [
+    "galaxy-scale simulation",
+    "multiplayer backend",
+    "combat system",
+    "non-canon lattice in physical sky",
+    "procedural universe streaming"
+  ],
+  "prohibitedSubstitutions": [
+    "A spinning model, static scene, or movement-only demo cannot replace the representative success path.",
+    "Desktop emulation cannot replace required real mobile or tablet evidence.",
+    "A different scenario or easier content set cannot replace a matched engine comparison.",
+    "Visual polish cannot replace save, input, audio, lifecycle, browser, or performance evidence.",
+    "Prototype success cannot be reported as production readiness."
+  ],
+  "projectClass": "browser-game",
+  "projectId": "heliocide-observatory",
+  "projectTitle": "HELIOCIDE OBSERVATORY",
+  "prototypeTier": "small",
+  "prototypeTierReasons": [
+    "prototype tier explicitly set to small"
+  ],
+  "rendererCandidate": "WebGLRenderer",
+  "requiredSystems": [
+    {
+      "id": "controllable-primary-interaction",
+      "label": "Controllable primary interaction",
+      "required": true,
+      "source": "core"
+    },
+    {
+      "id": "fixed-step-simulation",
+      "label": "Fixed-step simulation or justified deterministic update",
+      "required": true,
+      "source": "core"
+    },
+    {
+      "id": "camera-behavior",
+      "label": "Representative camera behavior",
+      "required": true,
+      "source": "core"
+    },
+    {
+      "id": "camera-collision",
+      "label": "Camera collision or explicit not-applicable evidence",
+      "required": true,
+      "source": "core"
+    },
+    {
+      "id": "physics-or-collision",
+      "label": "Representative physics or collision",
+      "required": true,
+      "source": "core"
+    },
+    {
+      "id": "animated-asset",
+      "label": "Representative animated asset",
+      "required": true,
+      "source": "core"
+    },
+    {
+      "id": "representative-environment",
+      "label": "Representative navigable environment",
+      "required": true,
+      "source": "core"
+    },
+    {
+      "id": "keyboard-input",
+      "label": "Normalized keyboard input actions",
+      "required": true,
+      "source": "core"
+    },
+    {
+      "id": "audio-unlock-and-positional-audio",
+      "label": "Browser audio unlock and representative positional or game audio",
+      "required": true,
+      "source": "core"
+    },
+    {
+      "id": "versioned-save-record",
+      "label": "Versioned save record",
+      "required": true,
+      "source": "core"
+    },
+    {
+      "id": "compressed-runtime-assets",
+      "label": "Compressed runtime assets",
+      "required": true,
+      "source": "core"
+    },
+    {
+      "id": "asset-manager-manifest",
+      "label": "Asset manager and manifest ownership",
+      "required": true,
+      "source": "core"
+    },
+    {
+      "id": "load-unload-disposal",
+      "label": "Load, unload, settle, disposal, and reload",
+      "required": true,
+      "source": "core"
+    },
+    {
+      "id": "semantic-dom-ui",
+      "label": "Semantic DOM HUD and pause behavior",
+      "required": true,
+      "source": "core"
+    },
+    {
+      "id": "repeatable-performance-scenario",
+      "label": "Repeatable performance scenario",
+      "required": true,
+      "source": "core"
+    },
+    {
+      "id": "browser-smoke-tests",
+      "label": "Target-browser smoke tests",
+      "required": true,
+      "source": "core"
+    },
+    {
+      "id": "context-loss-restoration",
+      "label": "Context loss and restoration",
+      "required": true,
+      "source": "contextLossRequired"
+    },
+    {
+      "id": "navigation-and-replanning",
+      "label": "Navigation, path requests, and replanning",
+      "required": true,
+      "source": "navigationRequired"
+    }
+  ],
+  "requirementsHash": "sha256:724b940b3b316adbe21735dc151aac8eeae5e5c4f3e32bf1aa4a9380bdfa8886",
+  "riskSignals": {
+    "aiComplexity": "low",
+    "animationHeavy": false,
+    "contentScale": "small",
+    "conventional2D": false,
+    "editorCritical": false,
+    "largeWorld": false,
+    "nonProgrammerContentTeam": false
+  },
+  "scenario": {
+    "id": "heliocide-observatory:gate-heliocide-001",
+    "successPath": [
+      "enter-station",
+      "interact-tactical-console",
+      "observe-npcs",
+      "aureal-gate-alert",
+      "shard-god-authority",
+      "heliocide-stellar-collapse",
+      "station-breach-cascade",
+      "siege-wall-starless-void",
+      "station-loss-containment",
+      "forensic-replay-scrub"
+    ],
+    "version": "1"
+  },
+  "schemaVersion": 1,
+  "screeningWarnings": [
+    "Keep high-frequency simulation outside React reconciliation and prove mount/unmount cleanup."
+  ],
+  "strategicWebAdvantages": [
+    "instant zero-install browser deployment",
+    "declarative UI and DOM accessibility overlay",
+    "flexible canvas/WebGL post-processing pipeline"
+  ],
+  "successPath": [
+    "enter-station",
+    "interact-tactical-console",
+    "observe-npcs",
+    "aureal-gate-alert",
+    "shard-god-authority",
+    "heliocide-stellar-collapse",
+    "station-breach-cascade",
+    "siege-wall-starless-void",
+    "station-loss-containment",
+    "forensic-replay-scrub"
+  ],
+  "targets": {
+    "browsers": [
+      "Chrome",
+      "Firefox",
+      "Safari"
+    ],
+    "contextLossRequired": true,
+    "desktopFpsTarget": 60.0,
+    "desktopFrameP95MsMax": 18.0,
+    "desktopRequired": true,
+    "gamepadRequired": false,
+    "initialTransferBytesMax": 26214400,
+    "mobileFpsTarget": 30.0,
+    "mobileFrameP95MsMax": 36.0,
+    "mobileRequired": false,
+    "navigationRequired": true,
+    "networkRequired": false,
+    "streamingRequired": false,
+    "touchRequired": false,
+    "webxrRequired": false
+  },
+  "targetsHash": "sha256:cab1b3c0860969ae26e574fbf1514f7c43901b462328c7015728989da7996101",
+  "validationErrors": []
+}

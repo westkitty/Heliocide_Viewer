@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-18T19:04:27.422203+00:00",
+  "project": {
+    "root": "/Users/andrew/heliocide_viewer",
+    "name": "heliocide-observatory",
+    "architecture": "mixed",
+    "renderer": "webgl",
+    "sourceFileCount": 23,
+    "dependencyCount": 18,
+    "frameLoopSignals": {
+      "requestAnimationFrame": [],
+      "setAnimationLoop": [],
+      "useFrame": [
+        "src/App.tsx",
+        "src/components/Camera/PlayerCameraController.tsx",
+        "src/components/PostProcessing/HeliocidePostProcessing.tsx",
+        "src/components/Space/DistantCascadingStars.tsx",
+        "src/components/Space/InhabitedPlanet.tsx",
+        "src/components/Space/OrbitalInfrastructure.tsx",
+        "src/components/Space/SiegeWallVoid.tsx",
+        "src/components/Space/StarCollapseShader.tsx",
+        "src/components/Station/DebrisField.tsx",
+        "src/components/Station/NPCs.tsx",
+        "src/components/Station/StationInterior.tsx",
+        "src/components/Station/TacticalConsole.tsx"
+      ]
+    },
+    "physicsDependencies": [
+      "@react-three/rapier"
+    ]
+  },
+  "summary": {
+    "score": 88,
+    "band": "healthy",
+    "findingCount": 1,
+    "severityCounts": {
+      "high": 1
+    },
+    "decisiveFinding": "TJS-R3F-001",
+    "staticOnly": true
+  },
+  "positiveSignals": [
+    {
+      "id": "TJS-POS-LOOP",
+      "category": "renderer-loop",
+      "title": "A frame-loop mechanism is visible",
+      "evidence": [
+        "useFrame"
+      ]
+    },
+    {
+      "id": "TJS-POS-TIME",
+      "category": "renderer-loop",
+      "title": "Fixed-step timing signals are present",
+      "evidence": [
+        "src/App.tsx"
+      ]
+    },
+    {
+      "id": "TJS-POS-DEPS",
+      "category": "dependencies",
+      "title": "Core Three.js ecosystem dependencies are pinned",
+      "evidence": [
+        "three: 0.169.0",
+        "@react-three/fiber: 8.17.10",
+        "@react-three/drei: 9.114.3",
+        "@react-three/rapier: 1.5.0"
+      ]
+    },
+    {
+      "id": "TJS-POS-TEST",
+      "category": "testing-observability",
+      "title": "Browser or integration test files are present",
+      "evidence": [
+        "tests/timeline.test.js"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "TJS-R3F-001",
+      "category": "state-ownership",
+      "severity": "high",
+      "confidence": "high",
+      "title": "React state setter detected inside useFrame",
+      "evidence": [
+        "src/App.tsx",
+        "src/components/Space/StarCollapseShader.tsx",
+        "src/components/Station/TacticalConsole.tsx"
+      ],
+      "impact": "Per-frame React reconciliation can cause rerenders, lifecycle instability, and frame-time spikes.",
+      "recommendation": "Move high-frequency state to refs, physics, ECS, or transient store access and publish only low-frequency UI state to React."
+    }
+  ],
+  "inventory": {
+    "dependencies": {
+      "@react-three/drei": "9.114.3",
+      "@react-three/fiber": "8.17.10",
+      "@react-three/rapier": "1.5.0",
+      "lucide-react": "0.453.0",
+      "react": "18.3.1",
+      "react-dom": "18.3.1",
+      "three": "0.169.0",
+      "three-mesh-bvh": "0.8.2",
+      "three-stdlib": "2.33.0",
+      "troika-three-text": "0.50.0",
+      "zustand": "4.5.5",
+      "@types/node": "^22.7.5",
+      "@types/react": "^18.3.11",
+      "@types/react-dom": "^18.3.0",
+      "@types/three": "^0.169.0",
+      "@vitejs/plugin-react": "^4.3.2",
+      "typescript": "^5.6.3",
+      "vite": "^5.4.8"
+    },
+    "rendererWebGLFiles": [],
+    "rendererWebGPUFiles": [],
+    "fixedStepFiles": [
+      "src/App.tsx"
+    ],
+    "directSceneMutationFiles": [],
+    "loaderFiles": [],
+    "assetManagerFiles": [],
+    "disposeFiles": [],
+    "unloadFiles": [],
+    "rendererInfoFiles": [],
+    "remoteAssetFiles": [],
+    "saveFiles": [],
+    "saveVersionFiles": [],
+    "contextLossFiles": [
+      "src/App.tsx"
+    ],
+    "browserTestFiles": [
+      "tests/timeline.test.js"
+    ]
+  },
+  "limitations": [
+    "Static heuristics do not prove runtime behavior, memory recovery, frame rate, thermals, visual correctness, or user-path success.",
+    "Serious findings require manual inspection of cited files before repair."
+  ]
+}
