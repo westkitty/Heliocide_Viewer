@@ -44,13 +44,21 @@ const StarVertexShader = `
     if (aExtinction < 9000.0 && uCurrentTime >= aExtinction) {
       alpha = max(0.0, 1.0 - (uCurrentTime - aExtinction) / 3.0);
     }
-    vAlpha = alpha;
 
     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
     gl_Position = projectionMatrix * mvPosition;
 
-    // Perspective point sizing with subpixel clamp
-    gl_PointSize = max(1.5, aSize * (900.0 / -mvPosition.z));
+    // Projected physical size on sensor
+    float projSize = aSize * (900.0 / -mvPosition.z);
+
+    // Subpixel energy conservation: clamp point size to prevent pixel dropouts, scale alpha proportionally
+    if (projSize < 1.2) {
+      vAlpha = alpha * clamp(projSize / 1.2, 0.25, 1.0);
+      gl_PointSize = 1.2;
+    } else {
+      vAlpha = alpha;
+      gl_PointSize = projSize;
+    }
   }
 `;
 
@@ -66,21 +74,25 @@ const StarFragmentShader = `
     float dist = length(coord) * 2.0;
     if (dist > 1.0) discard;
 
-    // Gaussian core + optical halo profile
-    float core = exp(-dist * dist * 9.0);
-    float halo = exp(-dist * 3.2) * 0.45;
+    // Analytic derivative anti-aliasing for temporal stability
+    float delta = fwidth(dist);
+    float edgeAA = 1.0 - smoothstep(1.0 - max(delta * 1.5, 0.08), 1.0, dist);
+
+    // Stable Gaussian core + optical halo profile
+    float core = exp(-dist * dist * 10.0);
+    float halo = exp(-dist * 3.5) * 0.4;
     float profile = core + halo;
 
-    // Restrained 4-point diffraction spike on prominent stars
+    // 4-point diffraction spike on bright stars
     float spike = 0.0;
-    if (vSize > 3.0) {
-      float hSpike = max(0.0, 1.0 - abs(coord.y) * 16.0) * max(0.0, 1.0 - abs(coord.x) * 2.5);
-      float vSpike = max(0.0, 1.0 - abs(coord.x) * 16.0) * max(0.0, 1.0 - abs(coord.y) * 2.5);
-      spike = (hSpike + vSpike) * 0.35 * (vSize / 5.0);
+    if (vSize > 3.2) {
+      float hSpike = max(0.0, 1.0 - abs(coord.y) * 18.0) * max(0.0, 1.0 - abs(coord.x) * 2.5);
+      float vSpike = max(0.0, 1.0 - abs(coord.x) * 18.0) * max(0.0, 1.0 - abs(coord.y) * 2.5);
+      spike = (hSpike + vSpike) * 0.3 * (vSize / 5.0);
     }
 
     vec3 finalColor = vColor * (profile + spike);
-    float finalAlpha = smoothstep(1.0, 0.8, dist) * vAlpha * (profile + spike * 0.8);
+    float finalAlpha = edgeAA * vAlpha * (profile + spike * 0.7);
 
     gl_FragColor = vec4(finalColor, clamp(finalAlpha, 0.0, 1.0));
   }
@@ -114,12 +126,10 @@ export function DistantCascadingStars() {
       pos[i * 3 + 1] = y;
       pos[i * 3 + 2] = z;
 
-      // Apparent magnitude distribution
       const magRoll = rng();
       const magnitude = Math.pow(magRoll, 3.4);
       sz[i] = THREE.MathUtils.lerp(1.5, 5.2, magnitude);
 
-      // Spectral class
       let specClass = SPECTRAL_CLASSES[3];
       const roll = rng();
       let cumWeight = 0;
@@ -136,7 +146,6 @@ export function DistantCascadingStars() {
       col[i * 3 + 1] = specClass.color.g * intensity;
       col[i * 3 + 2] = specClass.color.b * intensity;
 
-      // Extinction sector for Siege Wall
       const theta = Math.atan2(z, x);
       const isInSiegeSector = theta > 0.15 && theta < 2.45 && Math.abs(y) < 420;
 
