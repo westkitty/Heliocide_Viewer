@@ -15,12 +15,31 @@ export function StationInterior() {
   const overheadLightRef = useRef<THREE.PointLight>(null);
   const ambientLightRef = useRef<THREE.AmbientLight>(null);
   const windowRimLightRef = useRef<THREE.DirectionalLight>(null);
+  const consoleSpotlightRef = useRef<THREE.SpotLight>(null);
+  const strobeGroupRef = useRef<THREE.Group>(null);
 
   const currentTime = useTimelineStore((s) => s.currentTime);
 
-  useFrame(() => {
+  useFrame((state) => {
+    const time = state.clock.getElapsedTime();
+
+    // Rotate emergency strobe beacons during alarms
+    if (strobeGroupRef.current) {
+      if (currentTime > 52.0) {
+        strobeGroupRef.current.rotation.y = time * 6.0;
+      } else {
+        strobeGroupRef.current.rotation.y = 0;
+      }
+    }
+
     // Dynamic station catastrophic lighting overhaul
-    if (emergencyLightRef.current && overheadLightRef.current && ambientLightRef.current && windowRimLightRef.current) {
+    if (
+      emergencyLightRef.current &&
+      overheadLightRef.current &&
+      ambientLightRef.current &&
+      windowRimLightRef.current &&
+      consoleSpotlightRef.current
+    ) {
       if (currentTime < 52.0) {
         // Phase A & B: Nominal operation with bright overhead power and warm solar illumination
         ambientLightRef.current.intensity = 0.35;
@@ -31,6 +50,9 @@ export function StationInterior() {
 
         emergencyLightRef.current.intensity = 0.4;
         emergencyLightRef.current.color.set('#38bdf8');
+
+        consoleSpotlightRef.current.intensity = 1.5;
+        consoleSpotlightRef.current.color.set('#38bdf8');
 
         windowRimLightRef.current.intensity = 1.8;
         windowRimLightRef.current.color.set('#fff4e6');
@@ -48,8 +70,11 @@ export function StationInterior() {
 
         // Pulsing amber/red emergency warning
         const alertPulse = Math.sin(currentTime * 8.0) * 0.5 + 0.5;
-        emergencyLightRef.current.intensity = 1.2 * alertPulse + 0.2;
+        emergencyLightRef.current.intensity = 1.6 * alertPulse + 0.2;
         emergencyLightRef.current.color.set('#ef4444');
+
+        consoleSpotlightRef.current.intensity = 0.6 * alertPulse;
+        consoleSpotlightRef.current.color.set('#ef4444');
 
         // Window sunlight shifting from solar flash to dim cyan accretion
         windowRimLightRef.current.intensity = THREE.MathUtils.lerp(2.5, 0.4, collapseT);
@@ -62,9 +87,12 @@ export function StationInterior() {
         overheadLightRef.current.intensity = 0.0; // Complete main power blackout
 
         // High-contrast emergency red staccato strobe + sparks
-        const strobe = Math.sin(currentTime * 12.0) > 0.4 ? 2.8 : 0.1;
+        const strobe = Math.sin(currentTime * 12.0) > 0.4 ? 3.2 : 0.05;
         emergencyLightRef.current.intensity = strobe;
         emergencyLightRef.current.color.set('#dc2626');
+
+        consoleSpotlightRef.current.intensity = 0.2;
+        consoleSpotlightRef.current.color.set('#dc2626');
 
         // Faint cold accretion blue light penetrating the broken observation glass
         windowRimLightRef.current.intensity = 0.25;
@@ -98,17 +126,31 @@ export function StationInterior() {
         />
       </mesh>
 
-      {/* Non-Skid Rubber Polymer Floor Guideline Inlays */}
+      {/* Non-Skid Rubber Polymer Floor Guideline Inlays with Recessed Edge Luminaire */}
       <mesh position={[0, 0.01, -0.5]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[1.8, 13]} />
         <meshStandardMaterial
           color="#0284c7"
           emissive="#0369a1"
-          emissiveIntensity={currentTime > 52.0 ? 0.1 : 0.35}
+          emissiveIntensity={currentTime > 52.0 ? 0.1 : 0.45}
           metalness={0.15}
           roughness={0.8}
         />
       </mesh>
+
+      {/* Floor Guide Path Linear LED Strips */}
+      {[-0.95, 0.95].map((xOffset, idx) => (
+        <mesh key={`path-led-${idx}`} position={[xOffset, 0.02, -0.5]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[0.04, 13]} />
+          <meshStandardMaterial
+            color="#38bdf8"
+            emissive={currentTime > 52.0 ? '#ef4444' : '#38bdf8'}
+            emissiveIntensity={0.8}
+            metalness={0.1}
+            roughness={0.2}
+          />
+        </mesh>
+      ))}
 
       {/* Lateral Floor Hazard Caution Inlays */}
       {[-6, 6].map((xPos, idx) => (
@@ -157,7 +199,7 @@ export function StationInterior() {
         <ObservationGlass />
       </group>
 
-      {/* 3. Ceiling with Reinforced Structural Trusses & Colored Utility Conduits */}
+      {/* 3. Ceiling with Reinforced Structural Trusses, Linear Luminaires & Colored Utility Conduits */}
       <mesh position={[0, 7.0, 0]}>
         <boxGeometry args={[18, 0.2, 16]} />
         <meshStandardMaterial color="#0b0f19" metalness={0.7} roughness={0.4} />
@@ -168,6 +210,17 @@ export function StationInterior() {
           <mesh>
             <boxGeometry args={[17.8, 0.35, 0.45]} />
             <meshStandardMaterial color="#1e293b" metalness={0.9} roughness={0.2} />
+          </mesh>
+          {/* Linear Luminaire Strip Fixture */}
+          <mesh position={[0, -0.19, 0]}>
+            <boxGeometry args={[12, 0.04, 0.12]} />
+            <meshStandardMaterial
+              color="#f8fafc"
+              emissive={currentTime > 52.0 ? (currentTime > 78.0 ? '#000000' : '#ef4444') : '#f8fafc'}
+              emissiveIntensity={currentTime > 52.0 ? (currentTime > 78.0 ? 0.0 : 0.8) : 1.2}
+              metalness={0.2}
+              roughness={0.2}
+            />
           </mesh>
           {/* Conduit Line 1: Primary Coolant (Cyan) */}
           <mesh position={[0, -0.22, 0.18]} rotation={[0, 0, Math.PI / 2]}>
@@ -186,6 +239,26 @@ export function StationInterior() {
           </mesh>
         </group>
       ))}
+
+      {/* Emergency Rotating Strobe Beacon Pods */}
+      <group ref={strobeGroupRef} position={[0, 6.4, -2]}>
+        {[-4, 4].map((xPos, idx) => (
+          <group key={idx} position={[xPos, 0, 0]}>
+            <mesh>
+              <cylinderGeometry args={[0.15, 0.18, 0.25, 12]} />
+              <meshStandardMaterial color="#1e293b" metalness={0.8} roughness={0.3} />
+            </mesh>
+            <mesh position={[0, -0.15, 0]}>
+              <sphereGeometry args={[0.12, 12, 12]} />
+              <meshStandardMaterial
+                color="#ef4444"
+                emissive="#ef4444"
+                emissiveIntensity={currentTime > 52.0 ? 1.5 : 0.2}
+              />
+            </mesh>
+          </group>
+        ))}
+      </group>
 
       {/* 4. Left Wall with Diagnostic Monitors, Air Quality Sensor, and Stencils */}
       <mesh position={[-8.9, 3.5, 0]}>
@@ -292,10 +365,19 @@ export function StationInterior() {
         EVACUATION BAY 04 / SHUTTLE DOCK
       </Text>
 
-      {/* Dynamic Catastrophic Lighting Architecture */}
+      {/* Dynamic Catastrophic Practical Lighting Architecture */}
       <ambientLight ref={ambientLightRef} intensity={0.35} color="#bae6fd" />
       <pointLight ref={overheadLightRef} position={[0, 5.5, 0]} intensity={1.2} distance={15} color="#f8fafc" />
       <pointLight ref={emergencyLightRef} position={[0, 4.5, -2]} intensity={0.8} distance={12} color="#38bdf8" />
+      <spotLight
+        ref={consoleSpotlightRef}
+        position={[0, 6.2, -0.5]}
+        angle={0.65}
+        penumbra={0.5}
+        intensity={1.5}
+        color="#38bdf8"
+        distance={10}
+      />
       <directionalLight ref={windowRimLightRef} position={[0, 8, -20]} intensity={1.8} color="#fff4e6" />
 
       {/* Interactive Central Tactical Console */}
