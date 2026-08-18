@@ -8,6 +8,7 @@ import { NPCs } from './NPCs';
 import { DebrisField } from './DebrisField';
 import { StationExterior } from './StationExterior';
 import { ObservationGlass } from './ObservationGlass';
+import { HullBreach } from './HullBreach';
 
 export function StationInterior() {
   const breachRef = useRef<THREE.Group>(null);
@@ -80,22 +81,22 @@ export function StationInterior() {
         windowRimLightRef.current.intensity = THREE.MathUtils.lerp(2.5, 0.4, collapseT);
         windowRimLightRef.current.color.set('#00f0ff');
       } else {
-        // Phase E, F, G: Total power grid collapse, deep-space gloom, isolated emergency strobes
-        ambientLightRef.current.intensity = 0.03; // True deep space darkness
-        ambientLightRef.current.color.set('#020617');
+        // Phase E, F, G: Total power grid collapse, deep-space gloom, persistent emergency warning strobe
+        ambientLightRef.current.intensity = 0.14; // Deep emergency ambient baseline
+        ambientLightRef.current.color.set('#1e1b4b');
 
         overheadLightRef.current.intensity = 0.0; // Complete main power blackout
 
-        // High-contrast emergency red staccato strobe + sparks
-        const strobe = Math.sin(currentTime * 12.0) > 0.4 ? 3.2 : 0.05;
+        // High-contrast emergency red pulsing strobe + continuous emergency level
+        const strobe = (Math.sin(currentTime * 6.0) * 0.5 + 0.5) * 2.4 + 0.8;
         emergencyLightRef.current.intensity = strobe;
-        emergencyLightRef.current.color.set('#dc2626');
+        emergencyLightRef.current.color.set('#ef4444');
 
-        consoleSpotlightRef.current.intensity = 0.2;
-        consoleSpotlightRef.current.color.set('#dc2626');
+        consoleSpotlightRef.current.intensity = 0.8;
+        consoleSpotlightRef.current.color.set('#ef4444');
 
-        // Faint cold accretion blue light penetrating the broken observation glass
-        windowRimLightRef.current.intensity = 0.25;
+        // Faint cold accretion blue light penetrating the observation glass
+        windowRimLightRef.current.intensity = 0.6;
         windowRimLightRef.current.color.set('#0284c7');
       }
     }
@@ -313,31 +314,8 @@ export function StationInterior() {
         </Text>
       </group>
 
-      {/* Dynamic Rupture Bulkhead Section */}
-      <group ref={breachRef} position={[8.8, 3.5, 3]}>
-        <mesh>
-          <boxGeometry args={[0.3, 5.0, 4.5]} />
-          <meshStandardMaterial
-            color={currentTime > 78.0 ? '#451a03' : '#1e293b'}
-            metalness={0.85}
-            roughness={0.28}
-          />
-        </mesh>
-        {currentTime > 78.0 && (
-          <group position={[0.2, 0, 0]}>
-            {/* Sparking Breach Points */}
-            <pointLight color="#f97316" intensity={2.5} distance={6} />
-            <Text
-              position={[0, 1.5, 0]}
-              rotation={[0, -Math.PI / 2, 0]}
-              fontSize={0.22}
-              color="#ef4444"
-            >
-              ⚠ CRITICAL HULL BREACH
-            </Text>
-          </group>
-        )}
-      </group>
+      {/* Dynamic Hull Breach Architecture */}
+      <HullBreach />
 
       {/* 6. Back Wall & Evacuation Corridor (Z = 7.9) */}
       <mesh position={[-5.5, 3.5, 7.9]}>

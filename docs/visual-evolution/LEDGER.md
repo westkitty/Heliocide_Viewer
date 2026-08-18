@@ -49,7 +49,7 @@
 | **36** | Observation Glass Realism | Pending | A_NORMAL | ACCEPTED | 32 -> 40 | Physical glass transmission, subtle scratch imperfections, and emergency reflections |
 | **37** | Interior Architectural Detail | Pending | A_NORMAL | ACCEPTED | 32 -> 40 | Conduit runs, structural ribs, ceiling access hatches, and practical warning decals |
 | **38** | Practical Lighting System | Pending | ALL | ACCEPTED | 32 -> 40 | Emissive linear fixtures, console task lights, and dynamic emergency strobes |
-| **39** | Real Structural Breach | Pending | E_BREACH | Queued | - | Torn titanium bulkheads, jagged metal edges, and exposed conduit layers |
+| **39** | Real Structural Breach | Pending | E_BREACH | ACCEPTED | 25 -> 40 | Catastrophic hull breach with jagged titanium shards and arcing electrical discharge |
 | **40** | Decompression VFX | Pending | E_BREACH | Queued | - | High-velocity venting atmosphere, particulate streams, and directional ice crystals |
 | **41** | Debris Mass / Material / Collision Pass | Pending | E_BREACH | Queued | - | Varied debris pieces with physical mass, angular tumbling, and collision response |
 | **42** | Replace Primitive NPC Silhouettes | Pending | A_NORMAL / C_SHARD_GOD | Queued | - | Detailed Administration eva suit geometry, articulated joints, and visors |

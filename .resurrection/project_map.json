@@ -1,0 +1,83 @@
+{
+  "commands": [
+    {
+      "category": "build",
+      "command": "npm run build",
+      "source": "package.json:scripts.build"
+    },
+    {
+      "category": "run/dev",
+      "command": "npm run dev",
+      "source": "package.json:scripts.dev"
+    },
+    {
+      "category": "run/dev",
+      "command": "npm run preview",
+      "source": "package.json:scripts.preview"
+    },
+    {
+      "category": "test",
+      "command": "npm run test",
+      "source": "package.json:scripts.test"
+    },
+    {
+      "category": "unknown",
+      "command": "npm run typecheck",
+      "source": "package.json:scripts.typecheck"
+    },
+    {
+      "category": "run/dev",
+      "command": "npm run dev",
+      "source": "vite.config.*"
+    },
+    {
+      "category": "build",
+      "command": "npm run build",
+      "source": "vite.config.*"
+    }
+  ],
+  "duplicate_candidates": [],
+  "fragile_files": [
+    "package-lock.json",
+    "package.json",
+    "README.md",
+    "vite.config.ts"
+  ],
+  "git_state": {
+    "available": true,
+    "branch": "main",
+    "dirty": true,
+    "head": "55d420c513c1db348530c2c8ca667f98cc4e4b4c",
+    "head_subject": "visual-38: practical linear luminaires, focused console task spotlight, and emergency rotating strobes",
+    "is_repo": true,
+    "remote_url": "git@github.com:westkitty/Heliocide_Viewer.git",
+    "repo_root": "/Users/andrew/heliocide_viewer",
+    "staged_count": 0,
+    "tracked_modified_count": 0,
+    "untracked_count": 1
+  },
+  "identity": {
+    "name": "heliocide_viewer",
+    "path": "/Users/andrew/heliocide_viewer"
+  },
+  "project_type": {
+    "confidence": 0.75,
+    "evidence": [
+      "Found package.json",
+      "Found vite.config.ts",
+      "Found index.html"
+    ],
+    "purpose": "Purpose could not be inferred confidently from filesystem signals.",
+    "type": "vite_app"
+  },
+  "recommended_next_actions": [
+    "Inspect the current uncommitted Git changes before making new edits.",
+    "Back up or review fragile configuration files before any risky changes.",
+    "Validate the project with the hinted test command: npm run test",
+    "Validate the project with the hinted run/dev command: npm run dev",
+    "Validate the project with the hinted build command: npm run build"
+  ],
+  "scan_timestamp": "2026-08-18T20:31:01+00:00",
+  "scanner_version": "1.1.0",
+  "secret_risks": []
+}
