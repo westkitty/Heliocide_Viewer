@@ -32,39 +32,88 @@ const PlanetFragmentShader = `
   varying vec3 vWorldPosition;
   varying vec3 vWorldNormal;
 
-  void main() {
-    vec3 normal = normalize(vWorldNormal);
-    vec3 sunDir = normalize(uStarPosition - vWorldPosition);
-    vec3 viewDir = normalize(cameraPosition - vWorldPosition);
+  const float PI = 3.14159265359;
 
-    // Exact solar incidence angle (Terminator)
-    float NdotL = dot(normal, sunDir);
-    float dayFactor = smoothstep(-0.12, 0.22, NdotL);
+  // GGX Normal Distribution Function
+  float D_GGX(float NdotH, float roughness) {
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float NdotH2 = NdotH * NdotH;
+    float num = a2;
+    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+    denom = PI * denom * denom;
+    return num / max(denom, 0.0001);
+  }
+
+  // Smith GGX Geometric Shadowing
+  float G_SchlickSmithGGX(float NdotL, float NdotV, float roughness) {
+    float r = (roughness + 1.0);
+    float k = (r * r) / 8.0;
+    float numL = NdotL;
+    float denomL = NdotL * (1.0 - k) + k;
+    float numV = NdotV;
+    float denomV = NdotV * (1.0 - k) + k;
+    return (numL / max(denomL, 0.0001)) * (numV / max(denomV, 0.0001));
+  }
+
+  // Schlick Fresnel
+  vec3 F_Schlick(float cosTheta, vec3 F0) {
+    return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+  }
+
+  void main() {
+    vec3 N = normalize(vWorldNormal);
+    vec3 L = normalize(uStarPosition - vWorldPosition);
+    vec3 V = normalize(cameraPosition - vWorldPosition);
+    vec3 H = normalize(L + V);
+
+    float NdotL = max(0.0, dot(N, L));
+    float NdotV = max(0.001, dot(N, V));
+    float NdotH = max(0.0, dot(N, H));
+    float VdotH = max(0.0, dot(V, H));
+
+    float dayFactor = smoothstep(-0.12, 0.22, dot(N, L));
     float nightFactor = 1.0 - dayFactor;
 
-    // Sample multi-scale procedural planetary maps
+    // Sample textures: surface.a stores physical roughness map
     vec4 surface = texture2D(uSurfaceMap, vUv);
     vec4 night = texture2D(uNightMap, vUv);
     vec4 clouds = texture2D(uCloudMap, vUv);
 
-    // Ocean specular glint on sunward hemisphere
-    float isOcean = smoothstep(0.15, 0.35, surface.b - max(surface.r, surface.g));
-    vec3 halfVec = normalize(sunDir + viewDir);
-    float NdotH = max(0.0, dot(normal, halfVec));
-    float specular = pow(NdotH, 48.0) * isOcean * dayFactor * 2.2;
+    vec3 albedo = surface.rgb;
+    float roughness = clamp(surface.a, 0.04, 0.95);
 
-    // Direct warm solar illumination (5800K)
-    vec3 sunColor = vec3(1.0, 0.95, 0.88);
-    vec3 ambientSpace = vec3(0.015, 0.02, 0.035);
+    // Differentiate ocean vs landmass
+    bool isOcean = roughness < 0.15;
+    vec3 F0 = isOcean ? vec3(0.02) : vec3(0.04);
 
-    vec3 daySurface = mix(surface.rgb, clouds.rgb, clouds.a * 0.78);
-    vec3 dayLit = daySurface * (max(0.0, NdotL) * sunColor + ambientSpace) + vec3(specular);
+    // Cook-Torrance Microfacet Specular BRDF
+    float NDF = D_GGX(NdotH, roughness);
+    float G = G_SchlickSmithGGX(NdotL, NdotV, roughness);
+    vec3 F = F_Schlick(VdotH, F0);
 
-    // Night hemisphere: City lights clustered along tectonic coastlines and lowlands
-    vec3 nightLit = night.rgb * (1.0 - uCityBlackout) * nightFactor * 2.4 + ambientSpace * 0.5;
+    vec3 kS = F;
+    vec3 kD = (vec3(1.0) - kS) * (isOcean ? 0.2 : 1.0); // Ocean absorbs deep light
+
+    vec3 numerator = NDF * G * F;
+    float denominator = 4.0 * NdotV * NdotL + 0.0001;
+    vec3 specularBRDF = numerator / denominator;
+
+    // Direct warm solar radiance
+    vec3 sunRadiance = vec3(1.0, 0.96, 0.90) * 2.8;
+    vec3 ambientSpace = vec3(0.012, 0.016, 0.025);
+
+    vec3 diffuse = (kD * albedo / PI);
+    vec3 directLight = (diffuse + specularBRDF) * sunRadiance * NdotL;
+
+    // Cloud shadow & overlay
+    vec3 dayLit = mix(directLight, clouds.rgb * (NdotL * sunRadiance + ambientSpace), clouds.a * 0.78);
+
+    // Night hemisphere: City lights clustered along tectonic coastlines
+    vec3 nightLit = night.rgb * (1.0 - uCityBlackout) * nightFactor * 2.5 + ambientSpace;
 
     // Atmospheric Rayleigh scattering rim
-    float rim = 1.0 - max(0.0, dot(normal, viewDir));
+    float rim = 1.0 - max(0.0, dot(N, V));
     vec3 atmosGlow = vec3(0.2, 0.55, 0.95) * pow(rim, 3.2) * (dayFactor * 1.6 + 0.12);
 
     vec3 finalColor = mix(nightLit, dayLit, dayFactor) + atmosGlow;
@@ -73,7 +122,6 @@ const PlanetFragmentShader = `
   }
 `;
 
-// Deterministic fractal noise for continental synthesis
 function createPerlin2D() {
   const perm = new Uint8Array(512);
   for (let i = 0; i < 256; i++) perm[i] = i;
@@ -139,7 +187,6 @@ export function InhabitedPlanet() {
       return val;
     }
 
-    // 1. Procedural Geological Surface Canvas
     const pCanvas = document.createElement('canvas');
     pCanvas.width = width;
     pCanvas.height = height;
@@ -147,7 +194,6 @@ export function InhabitedPlanet() {
     const pImg = pCtx.createImageData(width, height);
     const pData = pImg.data;
 
-    // 2. Night City Lights Canvas
     const nCanvas = document.createElement('canvas');
     nCanvas.width = width;
     nCanvas.height = height;
@@ -155,7 +201,6 @@ export function InhabitedPlanet() {
     const nImg = nCtx.createImageData(width, height);
     const nData = nImg.data;
 
-    // 3. Cloud Cover Canvas
     const cCanvas = document.createElement('canvas');
     cCanvas.width = width;
     cCanvas.height = height;
@@ -164,66 +209,70 @@ export function InhabitedPlanet() {
     const cData = cImg.data;
 
     for (let py = 0; py < height; py++) {
-      const lat = (py / height) * Math.PI - Math.PI / 2; // -pi/2 to +pi/2
+      const lat = (py / height) * Math.PI - Math.PI / 2;
       const sinLat = Math.sin(lat);
       const cosLat = Math.cos(lat);
       const absLat = Math.abs(lat);
 
       for (let px = 0; px < width; px++) {
-        const lon = (px / width) * Math.PI * 2; // 0 to 2pi
+        const lon = (px / width) * Math.PI * 2;
         const idx = (py * width + px) * 4;
 
-        // Spherical 3D coordinate sampling for seamless seamless topology
         const sx = cosLat * Math.cos(lon) * 2.5;
         const sy = cosLat * Math.sin(lon) * 2.5;
         const sz = sinLat * 2.5;
 
-        // Continental cratons & tectonic plates
         const elevation = fbm(sx + 10.0, sy + sz + 10.0, 7) + 0.08 - absLat * 0.15;
         const mountainNoise = Math.pow(Math.abs(fbm(sx * 2.0 + sz * 1.5 + 30.0, sy * 2.0 + 30.0, 5)), 2.0) * 0.6;
         const totalElev = elevation + (elevation > 0.05 ? mountainNoise : 0);
 
-        let r = 0, g = 0, b = 0;
+        let r = 0, g = 0, b = 0, roughness = 0.8;
         let cityGlow = 0;
 
         if (totalElev < -0.15) {
-          // Deep Ocean Abyssal Trench
+          // Deep Ocean
           r = 6; g = 22; b = 58;
+          roughness = 0.04; // Mirror-smooth water
         } else if (totalElev < 0.0) {
-          // Continental Shelf & Shallow Coastal Waters
+          // Continental Shelf
           const depthT = (totalElev + 0.15) / 0.15;
           r = Math.floor(THREE.MathUtils.lerp(6, 18, depthT));
           g = Math.floor(THREE.MathUtils.lerp(22, 68, depthT));
           b = Math.floor(THREE.MathUtils.lerp(58, 110, depthT));
+          roughness = 0.06;
         } else if (absLat > 1.25) {
-          // Polar Ice Sheets & Glacial Caps
+          // Polar Ice Sheets
           r = 230; g = 242; b = 255;
+          roughness = 0.22;
         } else if (totalElev < 0.04) {
           // Coastal Beaches and Lowlands
           r = 42; g = 98; b = 54;
-          // Dense civilization clustering along fertile coastlines
+          roughness = 0.72;
           cityGlow = Math.max(0, fbm(sx * 8.0, sy * 8.0, 4) * 255);
         } else if (totalElev < 0.22) {
-          // Continental Plains & Temperate Forests
+          // Plains & Forests
           r = 30; g = 82; b = 38;
+          roughness = 0.85;
           cityGlow = Math.max(0, fbm(sx * 6.0, sy * 6.0, 4) * 180);
         } else if (totalElev < 0.38) {
-          // Arid Plateaus and Highlands
+          // Arid Plateaus
           r = 142; g = 118; b = 78;
+          roughness = 0.92;
         } else {
-          // Alpine Mountain Peaks & Snowcaps
+          // Alpine Mountain Peaks
           const peakT = (totalElev - 0.38) / 0.3;
           r = Math.floor(THREE.MathUtils.lerp(120, 240, peakT));
           g = Math.floor(THREE.MathUtils.lerp(120, 245, peakT));
           b = Math.floor(THREE.MathUtils.lerp(130, 255, peakT));
+          roughness = 0.95;
         }
 
         pData[idx] = r;
         pData[idx + 1] = g;
         pData[idx + 2] = b;
-        pData[idx + 3] = 255;
+        pData[idx + 3] = Math.floor(roughness * 255); // Alpha channel stores roughness
 
-        // Night City Lights: Amber-gold mega-cities + cyan orbital uplink nodes
+        // Night City Lights
         if (cityGlow > 70 && totalElev >= 0.0 && absLat < 1.2) {
           const isNode = fbm(sx * 15.0, sy * 15.0, 2) > 0.35;
           if (isNode) {
@@ -244,7 +293,7 @@ export function InhabitedPlanet() {
           nData[idx + 3] = 255;
         }
 
-        // Swirling Coriolis Cloud Bands & Weather Fronts
+        // Swirling Coriolis Cloud Bands
         const cloudNoise = fbm(sx * 1.5 + lon * 0.5, sy * 1.5, 5);
         const cloudDensity = smoothstep(0.08, 0.45, cloudNoise);
         cData[idx] = 255;
@@ -310,7 +359,7 @@ export function InhabitedPlanet() {
 
   return (
     <group ref={planetGroupRef} position={[65, -25, -120]}>
-      {/* Complete Physically-Shaded Inhabited Planet with Exact Solar Direction */}
+      {/* Complete Physically-Shaded Inhabited Planet with Cook-Torrance Microfacet PBR */}
       <mesh>
         <sphereGeometry args={[24, 64, 64]} />
         <shaderMaterial
