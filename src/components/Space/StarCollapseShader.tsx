@@ -30,7 +30,6 @@ const StarFragmentShader = `
   varying vec3 vPosition;
   varying vec3 vWorldPosition;
 
-  // 3D Simplex noise
   vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
   vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
   vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
@@ -97,17 +96,11 @@ const StarFragmentShader = `
     float NdotV = max(0.0, dot(normal, viewDir));
     float rim = 1.0 - NdotV;
 
-    // Stage 1-4 Thermodynamic Physics
-    // Stage 1 (progress 0.0-0.2): Normal G-type solar convection
-    // Stage 2 (progress 0.2-0.45): Compression blue-white radiation surge (ionizing flash)
-    // Stage 3 (progress 0.45-0.75): Core fade & Event Horizon nucleation
-    // Stage 4 (progress 0.75-1.0): Relativistic accretion ring & Doppler boosting
-
     float convSpeed = 0.25 + uCollapseProgress * 3.5;
     float granules = solarGranulation(vPosition * 0.5, uTime * convSpeed);
     float macroFlow = snoise(vPosition * 0.2 + vec3(0.0, uTime * convSpeed * 0.4, 0.0)) * 0.5 + 0.5;
 
-    // Eddington limb darkening
+    // Physical Eddington solar limb darkening
     float mu = NdotV;
     float eddingtonLimb = clamp(1.0 - 0.65 * (1.0 - mu) - 0.25 * (1.0 - sqrt(max(0.0, mu))), 0.15, 1.0);
 
@@ -119,35 +112,37 @@ const StarFragmentShader = `
     vec3 normalPhotosphere = mix(laneAmber, cellGold, granules);
     normalPhotosphere = mix(normalPhotosphere, deepCore, macroFlow * 0.6 + granules * 0.4) * eddingtonLimb * 1.8;
 
-    // Thermal compression blue-white surge (>30,000K)
+    // Thermal compression surge (>30,000K)
     vec3 surgeColor = vec3(0.75, 0.88, 1.0) * (2.5 + granules * 1.5);
 
-    // Relativistic accretion color (cyan-blue synchrotron emission)
+    // Relativistic accretion disc emission
     vec3 accretionBase = vec3(0.0, 0.85, 1.0);
-    // Relativistic Doppler beaming (approaching rim is brighter)
     float dopplerBeam = 1.0 + normal.x * 0.45;
     vec3 accretionColor = accretionBase * pow(rim, 2.5) * 4.0 * dopplerBeam;
 
-    // Blend thermodynamics across 4 physical stages
+    // GR Photon Ring: intensely bright razor-thin sub-milliradian boundary
+    float photonRing = smoothstep(0.84, 0.94, rim) * (1.0 - smoothstep(0.94, 0.98, rim)) * 8.0;
+    accretionColor += vec3(0.6, 0.92, 1.0) * photonRing;
+
+    // State blending
     vec3 stateColor = normalPhotosphere;
     if (uCollapseProgress < 0.25) {
-      // Transition Normal -> Compression Surge
       float t = uCollapseProgress / 0.25;
       stateColor = mix(normalPhotosphere, surgeColor, t);
     } else if (uCollapseProgress < 0.6) {
-      // Transition Compression Surge -> Relativistic Accretion
       float t = (uCollapseProgress - 0.25) / 0.35;
       stateColor = mix(surgeColor, accretionColor, t);
     } else {
-      // Established Accretion disc
       stateColor = accretionColor;
     }
 
-    // Black Hole Event Horizon Nucleation (True Black Center)
-    if (uCollapseProgress > 0.35) {
-      float horizonGrow = smoothstep(0.35, 0.85, uCollapseProgress);
-      float centerOcclusion = smoothstep(0.25 * (1.0 - horizonGrow), 0.75, rim);
-      stateColor *= centerOcclusion;
+    // Absolute Event Horizon Shadow (Pure Black Core Occlusion)
+    if (uCollapseProgress > 0.3) {
+      float horizonScale = smoothstep(0.3, 0.8, uCollapseProgress);
+      // Hard physical cutoff at shadow boundary with subpixel anti-aliasing
+      float shadowThreshold = 0.82 * horizonScale;
+      float shadowMask = smoothstep(shadowThreshold - 0.03, shadowThreshold + 0.02, rim);
+      stateColor *= shadowMask;
     }
 
     gl_FragColor = vec4(stateColor, 1.0);
@@ -318,7 +313,7 @@ export function StarCollapseShader() {
 
   return (
     <group position={[0, 0, -180]}>
-      {/* Central Star Core */}
+      {/* Central Star Core / Event Horizon Shadow */}
       <mesh ref={meshRef}>
         <sphereGeometry args={[18, 64, 64]} />
         <shaderMaterial
@@ -328,7 +323,7 @@ export function StarCollapseShader() {
         />
       </mesh>
 
-      {/* Volumetric Corona & Prominences */}
+      {/* Volumetric Corona & Accretion Halo */}
       <mesh ref={coronaRef}>
         <planeGeometry args={[72, 72]} />
         <shaderMaterial
