@@ -138,6 +138,7 @@ const StarFragmentShader = `
 export function StarCollapseShader() {
   const meshRef = useRef<THREE.Mesh>(null);
   const coronaRef = useRef<THREE.Mesh>(null);
+  const lightRef = useRef<THREE.PointLight>(null);
 
   const uniforms = useMemo(() => ({
     uTime: { value: 0 },
@@ -178,6 +179,26 @@ export function StarCollapseShader() {
       coronaRef.current.scale.setScalar((baseScale + pulse) * 1.45);
       coronaRef.current.rotation.z -= delta * 0.08;
     }
+
+    // Physically coherent dynamic stellar illumination
+    if (lightRef.current) {
+      const normalColor = new THREE.Color('#fff4e6'); // 5800K solar white-yellow
+      const flashColor = new THREE.Color('#bae6fd');  // High-energy ionizing flash
+      const collapsedColor = new THREE.Color('#0284c7'); // Dim relativistic accretion glow
+      
+      if (progress <= 0) {
+        lightRef.current.color.copy(normalColor);
+        lightRef.current.intensity = 15000;
+      } else if (progress < 0.4) {
+        const t = progress / 0.4;
+        lightRef.current.color.lerpColors(normalColor, flashColor, t);
+        lightRef.current.intensity = THREE.MathUtils.lerp(15000, 32000, t);
+      } else {
+        const t = (progress - 0.4) / 0.6;
+        lightRef.current.color.lerpColors(flashColor, collapsedColor, t);
+        lightRef.current.intensity = THREE.MathUtils.lerp(32000, 3200, t);
+      }
+    }
   });
 
   return (
@@ -205,10 +226,11 @@ export function StarCollapseShader() {
         />
       </mesh>
 
-      {/* Star Point Light illuminating the system */}
+      {/* Star Point Light illuminating the system with physically coherent color */}
       <pointLight
-        color="#00ddff"
-        intensity={8000}
+        ref={lightRef}
+        color="#fff4e6"
+        intensity={15000}
         distance={1200}
         decay={1.2}
       />

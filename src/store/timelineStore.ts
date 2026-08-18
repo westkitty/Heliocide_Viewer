@@ -147,14 +147,43 @@ interface TimelineStoreState {
   jumpToPhase: (phase: PhaseId) => void;
 }
 
+function getInitialStateFromURL() {
+  if (typeof window === 'undefined') return {};
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const timeParam = params.get('time');
+    const cameraParam = params.get('camera');
+    const modalParam = params.get('modal');
+    const pausedParam = params.get('paused');
+
+    const time = timeParam !== null ? parseFloat(timeParam) : 0;
+    const phase = getPhaseAtTime(time);
+    const cameraMode = (cameraParam as CameraMode) || (time >= 122.0 ? 'CINEMATIC' : 'FIRST_PERSON');
+    const tacticalModalOpen = modalParam === 'true';
+    const isPlaying = pausedParam === 'true' ? false : true;
+
+    return {
+      currentTime: time,
+      currentPhase: phase,
+      cameraMode,
+      tacticalModalOpen,
+      isPlaying
+    };
+  } catch {
+    return {};
+  }
+}
+
+const initialURL = getInitialStateFromURL();
+
 export const useTimelineStore = create<TimelineStoreState>((set, get) => ({
-  currentTime: 0,
-  isPlaying: true,
+  currentTime: initialURL.currentTime ?? 0,
+  isPlaying: initialURL.isPlaying ?? true,
   playbackRate: 1.0,
-  currentPhase: 'PHASE_A_NORMAL',
-  isForensicUnlocked: false,
-  cameraMode: 'FIRST_PERSON',
-  tacticalModalOpen: false,
+  currentPhase: initialURL.currentPhase ?? 'PHASE_A_NORMAL',
+  isForensicUnlocked: (initialURL.currentTime ?? 0) >= TOTAL_EXPERIENCE_DURATION,
+  cameraMode: initialURL.cameraMode ?? 'FIRST_PERSON',
+  tacticalModalOpen: initialURL.tacticalModalOpen ?? false,
   tacticalTab: 'OVERVIEW',
   audioUnlocked: false,
   activeSubtitle: null,
