@@ -4,6 +4,9 @@ import { useFrame } from '@react-three/fiber';
 import { useTimelineStore } from '../../store/timelineStore';
 
 const PlanetVertexShader = `
+  uniform vec3 uStarPosition;
+  uniform float uTidalStripping;
+
   varying vec2 vUv;
   varying vec3 vNormal;
   varying vec3 vWorldPosition;
@@ -13,6 +16,15 @@ const PlanetVertexShader = `
     vUv = uv;
     vNormal = normalize(normalMatrix * normal);
     vec4 worldPos = modelMatrix * vec4(position, 1.0);
+    
+    // Prolate tidal bulge stretching toward the gravitational singularity
+    if (uTidalStripping > 0.001) {
+      vec3 toBH = normalize(uStarPosition - worldPos.xyz);
+      vec3 wNorm = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
+      float tidalFactor = pow(max(0.0, dot(wNorm, toBH)), 2.0) * 1.8 * uTidalStripping;
+      worldPos.xyz += toBH * tidalFactor;
+    }
+
     vWorldPosition = worldPos.xyz;
     vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
     gl_Position = projectionMatrix * viewMatrix * worldPos;
@@ -125,6 +137,9 @@ const PlanetFragmentShader = `
 `;
 
 const CloudVertexShader = `
+  uniform vec3 uStarPosition;
+  uniform float uTidalStripping;
+
   varying vec2 vUv;
   varying vec3 vWorldPosition;
   varying vec3 vWorldNormal;
@@ -132,6 +147,14 @@ const CloudVertexShader = `
   void main() {
     vUv = uv;
     vec4 worldPos = modelMatrix * vec4(position, 1.0);
+
+    if (uTidalStripping > 0.001) {
+      vec3 toBH = normalize(uStarPosition - worldPos.xyz);
+      vec3 wNorm = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
+      float tidalFactor = pow(max(0.0, dot(wNorm, toBH)), 2.0) * 2.5 * uTidalStripping;
+      worldPos.xyz += toBH * tidalFactor;
+    }
+
     vWorldPosition = worldPos.xyz;
     vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
     gl_Position = projectionMatrix * viewMatrix * worldPos;
@@ -179,12 +202,24 @@ const CloudFragmentShader = `
 `;
 
 const AtmosphereVertexShader = `
+  uniform vec3 uStarPosition;
+  uniform float uTidalStripping;
+
   varying vec3 vWorldPosition;
   varying vec3 vWorldNormal;
 
   void main() {
-    vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
     vec4 worldPos = modelMatrix * vec4(position, 1.0);
+
+    // Severe atmospheric stripping elongation
+    if (uTidalStripping > 0.001) {
+      vec3 toBH = normalize(uStarPosition - worldPos.xyz);
+      vec3 wNorm = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
+      float tidalFactor = pow(max(0.0, dot(wNorm, toBH)), 1.5) * 5.5 * uTidalStripping;
+      worldPos.xyz += toBH * tidalFactor;
+    }
+
+    vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
     vWorldPosition = worldPos.xyz;
     gl_Position = projectionMatrix * viewMatrix * worldPos;
   }
@@ -192,6 +227,7 @@ const AtmosphereVertexShader = `
 
 const AtmosphereFragmentShader = `
   uniform vec3 uStarPosition;
+  uniform float uTidalStripping;
 
   varying vec3 vWorldPosition;
   varying vec3 vWorldNormal;
@@ -216,12 +252,16 @@ const AtmosphereFragmentShader = `
 
     vec3 rayleighColor = vec3(0.15, 0.55, 1.0);
     vec3 sunsetColor = vec3(1.0, 0.42, 0.12);
+    vec3 strippingColor = vec3(0.0, 0.95, 1.0); // Ionized ripped exosphere plasma
+    
     vec3 atmosBase = mix(rayleighColor, sunsetColor, sunsetFactor);
+    atmosBase = mix(atmosBase, strippingColor, uTidalStripping * 0.75);
 
     float intensity = pow(rim, 3.8) * (rayleighPhase * 1.2 + miePhase * 0.8) * (dayFactor * 2.2 + 0.1);
-    vec3 finalColor = atmosBase * intensity;
+    intensity += uTidalStripping * max(0.0, dot(N, L)) * 1.8;
 
-    float alpha = clamp(pow(rim, 2.5) * (dayFactor * 0.95 + 0.08), 0.0, 1.0);
+    vec3 finalColor = atmosBase * intensity;
+    float alpha = clamp(pow(rim, 2.5) * (dayFactor * 0.95 + 0.08) + uTidalStripping * 0.35, 0.0, 1.0);
     if (alpha < 0.005) discard;
 
     gl_FragColor = vec4(finalColor, alpha);
@@ -434,21 +474,24 @@ export function InhabitedPlanet() {
     uStarPosition: { value: new THREE.Vector3(0, 0, -180) },
     uCurrentTime: { value: 0 },
     uCityBlackout: { value: 0 },
-    uCloudOffset: { value: 0 }
+    uCloudOffset: { value: 0 },
+    uTidalStripping: { value: 0 }
   }), [planetTexture, nightTexture, cloudTexture]);
 
   const cloudUniforms = useMemo(() => ({
     uCloudMap: { value: cloudTexture },
     uStarPosition: { value: new THREE.Vector3(0, 0, -180) },
-    uCloudOffset: { value: 0 }
+    uCloudOffset: { value: 0 },
+    uTidalStripping: { value: 0 }
   }), [cloudTexture]);
 
   const atmosUniforms = useMemo(() => ({
-    uStarPosition: { value: new THREE.Vector3(0, 0, -180) }
+    uStarPosition: { value: new THREE.Vector3(0, 0, -180) },
+    uTidalStripping: { value: 0 }
   }), []);
 
   useFrame((_, delta) => {
-    if (!planetGroupRef.current || !materialRef.current || !cloudMaterialRef.current) return;
+    if (!planetGroupRef.current || !materialRef.current || !cloudMaterialRef.current || !atmosMaterialRef.current) return;
 
     planetGroupRef.current.rotation.y += delta * 0.015;
 
@@ -459,25 +502,33 @@ export function InhabitedPlanet() {
     materialRef.current.uniforms.uCurrentTime.value = currentTime;
 
     let blackout = 0;
+    let tidal = 0;
+
     if (currentTime < 52.0) {
       blackout = 0;
+      tidal = 0;
     } else if (currentTime < 78.0) {
       const t = (currentTime - 52.0) / 26.0;
       const flicker = Math.sin(currentTime * 25.0) > 0 ? 0.3 : 0.9;
       blackout = Math.min(1.0, t * flicker + t * 0.5);
+      tidal = t * 0.65;
     } else {
       blackout = 1.0;
+      const postT = Math.min(1.0, (currentTime - 78.0) / 40.0);
+      tidal = THREE.MathUtils.lerp(0.65, 1.0, postT);
     }
-    materialRef.current.uniforms.uCityBlackout.value = blackout;
 
-    // Relativistic Planetary Orbital Inertia & Axial Precession during Collapse
+    materialRef.current.uniforms.uCityBlackout.value = blackout;
+    materialRef.current.uniforms.uTidalStripping.value = tidal;
+    cloudMaterialRef.current.uniforms.uTidalStripping.value = tidal;
+    atmosMaterialRef.current.uniforms.uTidalStripping.value = tidal;
+
     if (currentTime < 52.0) {
       planetGroupRef.current.position.set(65, -25, -120);
       planetGroupRef.current.rotation.x = 0;
       planetGroupRef.current.rotation.z = 0.05;
     } else if (currentTime < 78.0) {
       const t = (currentTime - 52.0) / 26.0;
-      // Gravitational shear unmooring and axial nutation wobble
       const orbitalDriftX = 65 + Math.sin(currentTime * 0.25) * 3.5 * t;
       const orbitalDriftY = -25 - t * 8.0;
       const orbitalDriftZ = -120 - t * 14.0;
@@ -499,7 +550,7 @@ export function InhabitedPlanet() {
 
   return (
     <group ref={planetGroupRef} position={[65, -25, -120]}>
-      {/* 1. Physically-Shaded Surface with Exact Solar Terminator & Twilight Penumbra */}
+      {/* 1. Physically-Shaded Surface with Tidal Bulge Deformation */}
       <mesh>
         <sphereGeometry args={[24, 64, 64]} />
         <shaderMaterial
@@ -510,7 +561,7 @@ export function InhabitedPlanet() {
         />
       </mesh>
 
-      {/* 2. Independent Advecting Cloud Layer with Forward Scattering */}
+      {/* 2. Independent Advecting Cloud Layer with Tidal Drag */}
       <mesh ref={cloudMeshRef}>
         <sphereGeometry args={[24.25, 64, 64]} />
         <shaderMaterial
@@ -523,7 +574,7 @@ export function InhabitedPlanet() {
         />
       </mesh>
 
-      {/* 3. Volumetric Rayleigh & Mie Atmospheric Scattering Envelope Shell */}
+      {/* 3. Volumetric Rayleigh & Mie Atmospheric Scattering with Tidal Stripping Elongation */}
       <mesh>
         <sphereGeometry args={[24.8, 64, 64]} />
         <shaderMaterial
