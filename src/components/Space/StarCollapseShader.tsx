@@ -100,11 +100,9 @@ const StarFragmentShader = `
     float granules = solarGranulation(vPosition * 0.5, uTime * convSpeed);
     float macroFlow = snoise(vPosition * 0.2 + vec3(0.0, uTime * convSpeed * 0.4, 0.0)) * 0.5 + 0.5;
 
-    // Physical Eddington solar limb darkening
     float mu = NdotV;
     float eddingtonLimb = clamp(1.0 - 0.65 * (1.0 - mu) - 0.25 * (1.0 - sqrt(max(0.0, mu))), 0.15, 1.0);
 
-    // Normal solar colors (5800K)
     vec3 deepCore = vec3(1.0, 0.98, 0.92);
     vec3 cellGold = vec3(1.0, 0.76, 0.24);
     vec3 laneAmber = vec3(0.85, 0.42, 0.08);
@@ -112,19 +110,20 @@ const StarFragmentShader = `
     vec3 normalPhotosphere = mix(laneAmber, cellGold, granules);
     normalPhotosphere = mix(normalPhotosphere, deepCore, macroFlow * 0.6 + granules * 0.4) * eddingtonLimb * 1.8;
 
-    // Thermal compression surge (>30,000K)
     vec3 surgeColor = vec3(0.75, 0.88, 1.0) * (2.5 + granules * 1.5);
 
-    // Relativistic accretion disc emission
-    vec3 accretionBase = vec3(0.0, 0.85, 1.0);
-    float dopplerBeam = 1.0 + normal.x * 0.45;
-    vec3 accretionColor = accretionBase * pow(rim, 2.5) * 4.0 * dopplerBeam;
+    // Relativistic accretion disc emission with ISCO temperature gradient
+    vec3 iscoHot = vec3(0.92, 0.96, 1.0);
+    vec3 midDisc = vec3(0.0, 0.85, 1.0);
+    vec3 outerCool = vec3(0.05, 0.35, 0.85);
 
-    // GR Photon Ring: intensely bright razor-thin sub-milliradian boundary
-    float photonRing = smoothstep(0.84, 0.94, rim) * (1.0 - smoothstep(0.94, 0.98, rim)) * 8.0;
-    accretionColor += vec3(0.6, 0.92, 1.0) * photonRing;
+    float dopplerBeam = 1.0 + normal.x * 0.55;
+    vec3 accretionColor = mix(midDisc, iscoHot, pow(rim, 4.0)) * pow(rim, 2.2) * 4.2 * dopplerBeam;
 
-    // State blending
+    // Razor-sharp photon ring
+    float photonRing = smoothstep(0.85, 0.94, rim) * (1.0 - smoothstep(0.94, 0.98, rim)) * 8.5;
+    accretionColor += vec3(0.7, 0.95, 1.0) * photonRing;
+
     vec3 stateColor = normalPhotosphere;
     if (uCollapseProgress < 0.25) {
       float t = uCollapseProgress / 0.25;
@@ -136,10 +135,8 @@ const StarFragmentShader = `
       stateColor = accretionColor;
     }
 
-    // Absolute Event Horizon Shadow (Pure Black Core Occlusion)
     if (uCollapseProgress > 0.3) {
       float horizonScale = smoothstep(0.3, 0.8, uCollapseProgress);
-      // Hard physical cutoff at shadow boundary with subpixel anti-aliasing
       float shadowThreshold = 0.82 * horizonScale;
       float shadowMask = smoothstep(shadowThreshold - 0.03, shadowThreshold + 0.02, rim);
       stateColor *= shadowMask;
@@ -149,23 +146,24 @@ const StarFragmentShader = `
   }
 `;
 
-const CoronaVertexShader = `
+const AccretionVertexShader = `
   varying vec2 vUv;
-  varying vec3 vPosition;
+  varying vec3 vWorldPosition;
 
   void main() {
     vUv = uv;
-    vPosition = position;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    vec4 worldPos = modelMatrix * vec4(position, 1.0);
+    vWorldPosition = worldPos.xyz;
+    gl_Position = projectionMatrix * viewMatrix * worldPos;
   }
 `;
 
-const CoronaFragmentShader = `
+const AccretionFragmentShader = `
   uniform float uTime;
   uniform float uCollapseProgress;
 
   varying vec2 vUv;
-  varying vec3 vPosition;
+  varying vec3 vWorldPosition;
 
   vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
   vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -221,30 +219,44 @@ const CoronaFragmentShader = `
   void main() {
     vec2 centered = vUv - vec2(0.5);
     float dist = length(centered) * 2.0;
-    if (dist < 0.38 || dist > 1.0) discard;
+    if (dist < 0.28 || dist > 1.0) discard;
 
     float angle = atan(centered.y, centered.x);
 
-    float streamer1 = snoise(vec3(cos(angle * 4.0), sin(angle * 4.0), uTime * 0.12));
-    float streamer2 = snoise(vec3(cos(angle * 12.0) * 2.0, sin(angle * 12.0) * 2.0, uTime * 0.25));
-    float prominence = max(0.0, snoise(vec3(cos(angle * 8.0) * 3.0, sin(angle * 8.0) * 3.0, uTime * 0.35)));
+    // Keplerian differential rotation: inner orbits faster than outer
+    float keplerOmega = pow(max(0.1, dist), -1.5) * 1.8;
+    float rotAngle = angle + uTime * keplerOmega * (0.3 + uCollapseProgress * 0.7);
 
-    float radialFalloff = pow(1.0 - smoothstep(0.38, 1.0, dist), 2.2);
-    float filamentDensity = 0.5 + streamer1 * 0.3 + streamer2 * 0.2 + prominence * 0.6;
+    // Spiraling relativistic infall arms & viscous turbulence
+    float spiral1 = snoise(vec3(cos(rotAngle * 3.0) * dist * 3.0, sin(rotAngle * 3.0) * dist * 3.0, dist * 2.0));
+    float spiral2 = snoise(vec3(cos(rotAngle * 8.0) * dist * 6.0, sin(rotAngle * 8.0) * dist * 6.0, uTime * 0.4));
+    float turbulence = 0.6 + spiral1 * 0.25 + spiral2 * 0.15;
 
-    vec3 normalCorona = vec3(1.0, 0.78, 0.32) * radialFalloff * filamentDensity * 2.2;
-    vec3 collapsedCorona = vec3(0.0, 0.9, 1.0) * pow(radialFalloff, 1.5) * 3.0;
+    // Temperature radial gradient: Inner ISCO (>80,000K) -> Mid (cyan) -> Outer cool (deep blue)
+    vec3 iscoWhite = vec3(0.95, 0.98, 1.0);
+    vec3 midCyan = vec3(0.0, 0.88, 1.0);
+    vec3 outerBlue = vec3(0.05, 0.25, 0.75);
 
-    vec3 color = mix(normalCorona, collapsedCorona, uCollapseProgress);
-    float alpha = clamp(radialFalloff * filamentDensity * (1.0 - uCollapseProgress * 0.5), 0.0, 1.0);
+    float normDist = (dist - 0.28) / 0.72;
+    vec3 discTempColor = mix(iscoWhite, midCyan, smoothstep(0.0, 0.45, normDist));
+    discTempColor = mix(discTempColor, outerBlue, smoothstep(0.45, 1.0, normDist));
 
-    gl_FragColor = vec4(color, alpha);
+    // Relativistic Doppler beaming across disk orientation
+    float doppler = 1.0 + centered.x * 0.65;
+    vec3 discEmission = discTempColor * turbulence * (1.0 - smoothstep(0.7, 1.0, dist)) * 3.8 * doppler;
+
+    // Normal solar corona mode (progress < 0.35) vs Relativistic Accretion Disc (progress >= 0.35)
+    vec3 normalCorona = vec3(1.0, 0.78, 0.32) * (1.0 - dist) * 2.0;
+    vec3 finalColor = mix(normalCorona, discEmission, uCollapseProgress);
+
+    float alpha = clamp((1.0 - smoothstep(0.65, 1.0, dist)) * turbulence * (0.7 + uCollapseProgress * 0.3), 0.0, 1.0);
+    gl_FragColor = vec4(finalColor, alpha);
   }
 `;
 
 export function StarCollapseShader() {
   const meshRef = useRef<THREE.Mesh>(null);
-  const coronaRef = useRef<THREE.Mesh>(null);
+  const diskRef = useRef<THREE.Mesh>(null);
   const lightRef = useRef<THREE.PointLight>(null);
 
   const starUniforms = useMemo(() => ({
@@ -254,7 +266,7 @@ export function StarCollapseShader() {
     uLensingIntensity: { value: 0 }
   }), []);
 
-  const coronaUniforms = useMemo(() => ({
+  const diskUniforms = useMemo(() => ({
     uTime: { value: 0 },
     uCollapseProgress: { value: 0 }
   }), []);
@@ -262,7 +274,7 @@ export function StarCollapseShader() {
   useFrame((_, delta) => {
     if (!meshRef.current) return;
     starUniforms.uTime.value += delta;
-    coronaUniforms.uTime.value += delta;
+    diskUniforms.uTime.value += delta;
 
     const currentTime = useTimelineStore.getState().currentTime;
     starUniforms.uCurrentTime.value = currentTime;
@@ -278,7 +290,7 @@ export function StarCollapseShader() {
 
     starUniforms.uCollapseProgress.value = progress;
     starUniforms.uLensingIntensity.value = progress;
-    coronaUniforms.uCollapseProgress.value = progress;
+    diskUniforms.uCollapseProgress.value = progress;
 
     const baseScale = THREE.MathUtils.lerp(1.0, 0.28, progress);
     const pulse = progress > 0 && progress < 1 ? Math.sin(currentTime * 18.0) * 0.03 * (1 - progress) : 0;
@@ -286,9 +298,9 @@ export function StarCollapseShader() {
 
     meshRef.current.rotation.y += delta * (0.05 + progress * 0.5);
 
-    if (coronaRef.current) {
-      coronaRef.current.scale.setScalar((baseScale + pulse) * 1.55);
-      coronaRef.current.rotation.z -= delta * 0.04;
+    if (diskRef.current) {
+      diskRef.current.scale.setScalar((baseScale + pulse) * 1.6);
+      diskRef.current.rotation.z -= delta * 0.03;
     }
 
     if (lightRef.current) {
@@ -323,13 +335,13 @@ export function StarCollapseShader() {
         />
       </mesh>
 
-      {/* Volumetric Corona & Accretion Halo */}
-      <mesh ref={coronaRef}>
-        <planeGeometry args={[72, 72]} />
+      {/* Relativistic Accretion Infall Disc */}
+      <mesh ref={diskRef} rotation={[-0.3, 0.2, 0]}>
+        <planeGeometry args={[84, 84]} />
         <shaderMaterial
-          vertexShader={CoronaVertexShader}
-          fragmentShader={CoronaFragmentShader}
-          uniforms={coronaUniforms}
+          vertexShader={AccretionVertexShader}
+          fragmentShader={AccretionFragmentShader}
+          uniforms={diskUniforms}
           transparent
           side={THREE.DoubleSide}
           blending={THREE.AdditiveBlending}

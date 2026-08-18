@@ -25,7 +25,7 @@
 | **12** | Physically Legible Collapse Thermodynamics | Pending | D_COLLAPSE | ACCEPTED | 29 -> 40 | Progressive gravitational contraction, temperature shift, and blue-shifted radiation |
 | **13** | Collapse Shock / Mass-Ejection Event | Pending | D_COLLAPSE | ACCEPTED | 31 -> 40 | Relativistic shockwave ring and directional ejecta particulate |
 | **14** | True Event-Horizon Shadow | Pending | D_COLLAPSE | ACCEPTED | 32 -> 40 | Pure black central event-horizon silhouette with depth-accurate occlusion |
-| **15** | Accretion / Infall Structure | Pending | D_COLLAPSE | Queued | - | Volumetric warped accretion disk with temperature gradient and physical thickness |
+| **15** | Accretion / Infall Structure | Pending | D_COLLAPSE | ACCEPTED | 32 -> 40 | Volumetric warped accretion disk with temperature gradient and physical thickness |
 | **16** | Relativistic Brightness Asymmetry | Pending | D_COLLAPSE | Queued | - | Relativistic Doppler beaming asymmetry on approaching accretion limb |
 | **17** | Photon-Ring Detail | Pending | D_COLLAPSE | Queued | - | Ultra-thin, razor-sharp photon ring lensing boundary |
 | **18** | Gravitational Lensing | Pending | D_COLLAPSE | Queued | - | Einstein ring distortion warping background starfield and space behind singularity |
