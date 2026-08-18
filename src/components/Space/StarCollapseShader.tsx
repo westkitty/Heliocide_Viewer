@@ -118,9 +118,12 @@ const StarFragmentShader = `
     float dopplerBeam = 1.0 + normal.x * 0.65;
     vec3 accretionColor = vec3(0.0, 0.85, 1.0) * pow(rim, 2.2) * 4.2 * dopplerBeam;
 
-    // Razor-sharp photon ring
-    float photonRing = smoothstep(0.85, 0.94, rim) * (1.0 - smoothstep(0.94, 0.98, rim)) * 8.5;
-    accretionColor += vec3(0.7, 0.95, 1.0) * photonRing;
+    // Multi-tier General Relativistic Photon Ring Structure (n=1 primary and n=2 secondary sub-rings)
+    float n1_ring = exp(-pow((rim - 0.885) / 0.015, 2.0)) * 7.5;
+    float n2_subring = exp(-pow((rim - 0.865) / 0.0035, 2.0)) * 12.0;
+    float photonTotal = n1_ring + n2_subring;
+    vec3 photonLensing = vec3(0.75, 0.94, 1.0) * photonTotal;
+    accretionColor += photonLensing;
 
     vec3 stateColor = normalPhotosphere;
     if (uCollapseProgress < 0.25) {
@@ -136,7 +139,7 @@ const StarFragmentShader = `
     if (uCollapseProgress > 0.3) {
       float horizonScale = smoothstep(0.3, 0.8, uCollapseProgress);
       float shadowThreshold = 0.82 * horizonScale;
-      float shadowMask = smoothstep(shadowThreshold - 0.03, shadowThreshold + 0.02, rim);
+      float shadowMask = smoothstep(shadowThreshold - 0.02, shadowThreshold + 0.015, rim);
       stateColor *= shadowMask;
     }
 
@@ -221,26 +224,20 @@ const AccretionFragmentShader = `
 
     float angle = atan(centered.y, centered.x);
 
-    // Keplerian orbital velocity (v ~ r^-0.5)
     float normDist = (dist - 0.28) / 0.72;
     float keplerOmega = pow(max(0.1, dist), -1.5) * 1.8;
     float rotAngle = angle + uTime * keplerOmega * (0.3 + uCollapseProgress * 0.7);
 
-    // Relativistic Doppler Beaming Factor
-    // Gas orbital velocity beta reaches 0.45c near inner edge
     float beta = mix(0.48, 0.15, normDist);
     float gamma = 1.0 / sqrt(max(0.01, 1.0 - beta * beta));
-    // Approaching side (centered.x < 0) vs Receding side (centered.x > 0)
     float vDotView = -sin(angle); 
     float dopplerFactor = 1.0 / (gamma * (1.0 - beta * vDotView));
     float beamingIntensity = pow(dopplerFactor, 3.8);
 
-    // Spiraling relativistic infall arms & viscous turbulence
     float spiral1 = snoise(vec3(cos(rotAngle * 3.0) * dist * 3.0, sin(rotAngle * 3.0) * dist * 3.0, dist * 2.0));
     float spiral2 = snoise(vec3(cos(rotAngle * 8.0) * dist * 6.0, sin(rotAngle * 8.0) * dist * 6.0, uTime * 0.4));
     float turbulence = 0.6 + spiral1 * 0.25 + spiral2 * 0.15;
 
-    // Relativistic Doppler color shift (blue-boosted on approaching, red-dimmed on receding)
     vec3 iscoWhite = vec3(0.95, 0.98, 1.0);
     vec3 midCyan = vec3(0.0, 0.88, 1.0);
     vec3 outerBlue = vec3(0.05, 0.25, 0.75);
@@ -331,7 +328,7 @@ export function StarCollapseShader() {
 
   return (
     <group position={[0, 0, -180]}>
-      {/* Central Star Core / Event Horizon Shadow */}
+      {/* Central Star Core / Event Horizon Shadow with Nested Photon Sub-Rings */}
       <mesh ref={meshRef}>
         <sphereGeometry args={[18, 64, 64]} />
         <shaderMaterial
