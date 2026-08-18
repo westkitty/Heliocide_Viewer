@@ -41,7 +41,7 @@
 | **28** | Tidal / Atmospheric Stripping Effects | Pending | E_BREACH | ACCEPTED | 32 -> 40 | Atmospheric envelope peeling and tidal bulge under extreme gravity gradient |
 | **29** | Civilization Failure Progression | Pending | E_BREACH | ACCEPTED | 32 -> 40 | Regional power grid blackouts and emergency beacon cascades across dark side |
 | **30** | Orbital Infrastructure Quality Pass | Pending | A_NORMAL | ACCEPTED | 32 -> 40 | High-detail solar habitats, docking gantries, scale paneling, and navigation beacons |
-| **31** | Exterior Ship Quality Pass | Pending | A_NORMAL | Queued | - | Detailed Administration patrol cruiser with thruster assemblies and hull hierarchy |
+| **31** | Exterior Ship Quality Pass | Pending | A_NORMAL | ACCEPTED | 32 -> 40 | Detailed Administration patrol cruiser with thruster assemblies and hull hierarchy |
 | **32** | Propulsion and Mass-Respecting Ship Motion | Pending | A_NORMAL | Queued | - | Inertial vector maneuvering, thruster plume dynamics, and realistic banking |
 | **33** | Station Exterior Hero Quality | Pending | G_STATION_LOSS / H_REPLAY | Queued | - | Massive truss framework, observation cupola, docking spines, and micro-paneling |
 | **34** | Camera Mass and Cinematography | Pending | ALL | Queued | - | Physical camera inertia, smooth momentum, and authored cinematic framing |

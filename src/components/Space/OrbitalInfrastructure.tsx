@@ -5,11 +5,12 @@ import { useTimelineStore } from '../../store/timelineStore';
 
 interface ShipData {
   name: string;
+  type: 'cruiser' | 'shuttle' | 'solar_array';
   initialPos: [number, number, number];
   orbitRadius: number;
   orbitSpeed: number;
   orbitInclination: number;
-  color: string;
+  scale: number;
 }
 
 export function OrbitalInfrastructure() {
@@ -22,45 +23,43 @@ export function OrbitalInfrastructure() {
   const ships: ShipData[] = useMemo(() => [
     {
       name: 'Administration Cruiser "Aethelgard"',
+      type: 'cruiser',
       initialPos: [-45, 12, -90],
       orbitRadius: 95,
       orbitSpeed: 0.15,
       orbitInclination: 0.2,
-      color: '#e2e8f0'
+      scale: 1.1
     },
     {
       name: 'Transit Ferry "Hal\'Ven Shuttle 12"',
+      type: 'shuttle',
       initialPos: [35, -10, -75],
       orbitRadius: 80,
       orbitSpeed: 0.22,
       orbitInclination: -0.15,
-      color: '#94a3b8'
+      scale: 0.8
     },
     {
       name: 'Solar Relay Array "Alpha-Nine"',
+      type: 'solar_array',
       initialPos: [-20, 28, -130],
       orbitRadius: 130,
       orbitSpeed: 0.08,
       orbitInclination: 0.35,
-      color: '#cbd5e1'
+      scale: 1.3
     }
   ], []);
 
   const shipRefs = useRef<(THREE.Group | null)[]>([]);
 
   useFrame((_, delta) => {
-    // Solar Ring Rotation
     if (solarRingRef.current) {
       solarRingRef.current.rotation.z += delta * 0.02;
     }
-
-    // Orbital Relay Habitat Precession
     if (relayHabitatRef.current) {
       relayHabitatRef.current.rotation.y += delta * 0.04;
       relayHabitatRef.current.rotation.x += delta * 0.01;
     }
-
-    // Cargo Swarm Orbital Drifting
     if (cargoGroupRef.current) {
       cargoGroupRef.current.rotation.y += delta * 0.06;
     }
@@ -70,7 +69,6 @@ export function OrbitalInfrastructure() {
       if (!ref) return;
 
       if (currentTime < 52.0) {
-        // Nominal orbital flight
         const angle = currentTime * ship.orbitSpeed + idx * 2.1;
         const x = Math.cos(angle) * ship.orbitRadius * 0.5 + ship.initialPos[0];
         const z = Math.sin(angle) * ship.orbitRadius * 0.5 + ship.initialPos[2];
@@ -79,7 +77,6 @@ export function OrbitalInfrastructure() {
         ref.rotation.y = -angle + Math.PI / 2;
         ref.rotation.z = ship.orbitInclination;
       } else if (currentTime < 78.0) {
-        // Heliocide onset: Emergency thrust attempt
         const t = (currentTime - 52.0) / 26.0;
         const angle = (52.0 + (currentTime - 52.0) * 1.5) * ship.orbitSpeed + idx * 2.1;
         const radius = ship.orbitRadius * (1.0 - t * 0.25);
@@ -90,7 +87,6 @@ export function OrbitalInfrastructure() {
         ref.rotation.x += delta * (0.5 + t * 2.0);
         ref.rotation.y += delta * (0.8 + t * 3.0);
       } else {
-        // Gravitational spiral / tumble into singularity
         const decay = Math.min(1.0, (currentTime - 78.0) / 45.0);
         const spiralSpeed = 3.0 + decay * 8.0;
         const spiralRadius = Math.max(2, (1.0 - decay) * 40);
@@ -111,101 +107,136 @@ export function OrbitalInfrastructure() {
 
   return (
     <group ref={groupRef}>
-      {/* 1. High-Detail Administration Patrol Cruisers & Traffic */}
+      {/* 1. Hero High-Fidelity Naval & Civilian Spacecraft */}
       {ships.map((ship, idx) => (
         <group
           key={ship.name}
           ref={(el) => (shipRefs.current[idx] = el)}
           position={ship.initialPos}
+          scale={ship.scale}
         >
-          {/* Main Armored Chassis Hull */}
-          <mesh castShadow receiveShadow>
-            <boxGeometry args={[3.2, 0.9, 8.5]} />
-            <meshStandardMaterial
-              color={ship.color}
-              metalness={0.85}
-              roughness={0.25}
-            />
-          </mesh>
+          {ship.type === 'cruiser' && (
+            <group>
+              {/* Armored Dagger Prow Hull */}
+              <mesh castShadow receiveShadow position={[0, 0, -1.2]}>
+                <boxGeometry args={[3.4, 1.1, 7.2]} />
+                <meshStandardMaterial color="#f1f5f9" metalness={0.9} roughness={0.2} />
+              </mesh>
+              {/* Stepped Command Bridge Superstructure */}
+              <mesh position={[0, 0.85, -2.2]}>
+                <boxGeometry args={[2.0, 0.65, 2.6]} />
+                <meshStandardMaterial color="#334155" metalness={0.85} roughness={0.25} />
+              </mesh>
+              {/* Command Viewport Strip */}
+              <mesh position={[0, 0.95, -3.52]}>
+                <boxGeometry args={[1.6, 0.22, 0.1]} />
+                <meshBasicMaterial color={isEmergency ? '#ef4444' : '#38bdf8'} />
+              </mesh>
+              {/* Dorsal Heat Rejection Radiators */}
+              <mesh position={[0, 1.2, 0.8]}>
+                <boxGeometry args={[0.08, 1.4, 4.2]} />
+                <meshStandardMaterial color="#0f172a" metalness={0.95} roughness={0.1} />
+              </mesh>
+              {/* Lateral Sponsons with 4x RCS Quads */}
+              <mesh position={[2.1, 0, -0.4]}>
+                <boxGeometry args={[0.9, 0.8, 4.0]} />
+                <meshStandardMaterial color="#cbd5e1" metalness={0.88} roughness={0.3} />
+              </mesh>
+              <mesh position={[-2.1, 0, -0.4]}>
+                <boxGeometry args={[0.9, 0.8, 4.0]} />
+                <meshStandardMaterial color="#cbd5e1" metalness={0.88} roughness={0.3} />
+              </mesh>
+              {/* Twin Heavy Ion Fusion Thruster Nacelles */}
+              <mesh position={[1.1, 0, 3.2]} rotation={[Math.PI / 2, 0, 0]}>
+                <cylinderGeometry args={[0.65, 0.85, 1.8, 16]} />
+                <meshStandardMaterial color="#1e293b" metalness={0.92} roughness={0.2} />
+              </mesh>
+              <mesh position={[-1.1, 0, 3.2]} rotation={[Math.PI / 2, 0, 0]}>
+                <cylinderGeometry args={[0.65, 0.85, 1.8, 16]} />
+                <meshStandardMaterial color="#1e293b" metalness={0.92} roughness={0.2} />
+              </mesh>
+              {/* Thruster Exhaust Plume Core */}
+              <mesh position={[1.1, 0, 4.2]} rotation={[Math.PI / 2, 0, 0]}>
+                <cylinderGeometry args={[0.5, 0.7, 0.4, 16]} />
+                <meshBasicMaterial color={isEmergency ? (currentTime < 78.0 ? '#f97316' : '#ef4444') : '#38bdf8'} />
+              </mesh>
+              <mesh position={[-1.1, 0, 4.2]} rotation={[Math.PI / 2, 0, 0]}>
+                <cylinderGeometry args={[0.5, 0.7, 0.4, 16]} />
+                <meshBasicMaterial color={isEmergency ? (currentTime < 78.0 ? '#f97316' : '#ef4444') : '#38bdf8'} />
+              </mesh>
+              {/* Navigation Strobe Lights */}
+              <mesh position={[2.6, 0.2, -2.4]}>
+                <sphereGeometry args={[0.16, 8, 8]} />
+                <meshBasicMaterial color="#ef4444" />
+              </mesh>
+              <mesh position={[-2.6, 0.2, -2.4]}>
+                <sphereGeometry args={[0.16, 8, 8]} />
+                <meshBasicMaterial color="#10b981" />
+              </mesh>
+            </group>
+          )}
 
-          {/* Forward Sensor / Command Bridge with Multi-Deck Glass */}
-          <mesh position={[0, 0.65, -2.6]}>
-            <boxGeometry args={[1.8, 0.65, 2.4]} />
-            <meshStandardMaterial
-              color="#0284c7"
-              emissive={isEmergency ? '#ef4444' : '#0ea5e9'}
-              emissiveIntensity={currentTime > 78.0 ? 0.2 : 0.8}
-              roughness={0.1}
-            />
-          </mesh>
+          {ship.type === 'shuttle' && (
+            <group>
+              {/* Aerodynamic Lifting Body */}
+              <mesh castShadow receiveShadow>
+                <boxGeometry args={[2.4, 0.8, 4.8]} />
+                <meshStandardMaterial color="#e2e8f0" metalness={0.8} roughness={0.3} />
+              </mesh>
+              {/* Thermal Shield Belly Plating */}
+              <mesh position={[0, -0.42, 0]}>
+                <boxGeometry args={[2.42, 0.06, 4.82]} />
+                <meshStandardMaterial color="#0f172a" metalness={0.4} roughness={0.8} />
+              </mesh>
+              {/* Forward Cockpit Canopy */}
+              <mesh position={[0, 0.35, -1.6]}>
+                <boxGeometry args={[1.4, 0.45, 1.4]} />
+                <meshBasicMaterial color="#0284c7" />
+              </mesh>
+              {/* Single Main Aerospike Engine */}
+              <mesh position={[0, 0, 2.6]} rotation={[Math.PI / 2, 0, 0]}>
+                <cylinderGeometry args={[0.5, 0.7, 0.5, 16]} />
+                <meshBasicMaterial color={isEmergency ? '#f97316' : '#60a5fa'} />
+              </mesh>
+            </group>
+          )}
 
-          {/* Lateral Gantry Outriggers & Solar Wings */}
-          <mesh position={[3.2, 0, 0]}>
-            <boxGeometry args={[3.4, 0.08, 5.5]} />
-            <meshStandardMaterial
-              color="#0f172a"
-              metalness={0.95}
-              roughness={0.15}
-            />
-          </mesh>
-          <mesh position={[-3.2, 0, 0]}>
-            <boxGeometry args={[3.4, 0.08, 5.5]} />
-            <meshStandardMaterial
-              color="#0f172a"
-              metalness={0.95}
-              roughness={0.15}
-            />
-          </mesh>
-
-          {/* Navigation Positional Beacons (Port Red / Starboard Green / Spine White) */}
-          <mesh position={[4.9, 0.1, 0]}>
-            <sphereGeometry args={[0.18, 8, 8]} />
-            <meshBasicMaterial color="#ef4444" />
-          </mesh>
-          <mesh position={[-4.9, 0.1, 0]}>
-            <sphereGeometry args={[0.18, 8, 8]} />
-            <meshBasicMaterial color="#10b981" />
-          </mesh>
-          <mesh position={[0, 1.1, -3.6]}>
-            <sphereGeometry args={[0.15, 8, 8]} />
-            <meshBasicMaterial
-              color="#ffffff"
-              transparent
-              opacity={beaconBlink}
-            />
-          </mesh>
-
-          {/* Ion Thruster Vectoring Assemblies */}
-          <mesh position={[0, 0, 4.4]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.7, 0.9, 0.5, 16]} />
-            <meshBasicMaterial
-              color={isEmergency ? (currentTime < 78.0 ? '#f97316' : '#ef4444') : '#38bdf8'}
-            />
-          </mesh>
+          {ship.type === 'solar_array' && (
+            <group>
+              {/* Central Power Core & Battery Hub */}
+              <mesh>
+                <cylinderGeometry args={[0.9, 0.9, 5.0, 16]} />
+                <meshStandardMaterial color="#cbd5e1" metalness={0.9} roughness={0.25} />
+              </mesh>
+              {/* Diamond-Planar Photovoltaic Wings */}
+              <mesh position={[4.2, 0, 0]}>
+                <boxGeometry args={[6.5, 0.05, 3.8]} />
+                <meshStandardMaterial color="#0f172a" metalness={0.98} roughness={0.12} />
+              </mesh>
+              <mesh position={[-4.2, 0, 0]}>
+                <boxGeometry args={[6.5, 0.05, 3.8]} />
+                <meshStandardMaterial color="#0f172a" metalness={0.98} roughness={0.12} />
+              </mesh>
+              {/* High-Gain Gimbal Laser Transceiver */}
+              <mesh position={[0, 2.9, 0]} rotation={[-0.3, 0.4, 0]}>
+                <coneGeometry args={[1.6, 0.8, 16, 1, true]} />
+                <meshStandardMaterial color="#eab308" metalness={0.95} roughness={0.1} side={THREE.DoubleSide} />
+              </mesh>
+            </group>
+          )}
         </group>
       ))}
 
       {/* 2. Mega-Scale Solar Collector Ring Swarm around Hal'Ven Prime */}
       <group ref={solarRingRef} position={[0, 0, -180]} rotation={[0.45, 0.25, 0]}>
-        {/* Structural Torus Ring Truss */}
         <mesh>
           <torusGeometry args={[56, 0.6, 16, 120]} />
-          <meshStandardMaterial
-            color="#64748b"
-            metalness={0.92}
-            roughness={0.25}
-          />
+          <meshStandardMaterial color="#64748b" metalness={0.92} roughness={0.25} />
         </mesh>
-        {/* Concentric Secondary Photovoltaic Rail */}
         <mesh>
           <torusGeometry args={[62, 0.35, 16, 120]} />
-          <meshStandardMaterial
-            color="#1e293b"
-            metalness={0.95}
-            roughness={0.15}
-          />
+          <meshStandardMaterial color="#1e293b" metalness={0.95} roughness={0.15} />
         </mesh>
-        {/* Synchronous Ring Strobe Beacons */}
         {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => {
           const angle = (i / 8) * Math.PI * 2;
           return (
@@ -214,11 +245,7 @@ export function OrbitalInfrastructure() {
               position={[Math.cos(angle) * 56, Math.sin(angle) * 56, 0]}
             >
               <sphereGeometry args={[0.6, 8, 8]} />
-              <meshBasicMaterial
-                color="#38bdf8"
-                transparent
-                opacity={beaconBlink}
-              />
+              <meshBasicMaterial color="#38bdf8" transparent opacity={beaconBlink} />
             </mesh>
           );
         })}
@@ -226,35 +253,18 @@ export function OrbitalInfrastructure() {
 
       {/* 3. Deep-Space Quantum Relay & Habitation Spindle orbiting Hal'Ven IV */}
       <group ref={relayHabitatRef} position={[52, -14, -100]}>
-        {/* Central Habitation Cylinder */}
         <mesh castShadow>
           <cylinderGeometry args={[1.8, 1.8, 14, 16]} />
-          <meshStandardMaterial
-            color="#e2e8f0"
-            metalness={0.88}
-            roughness={0.2}
-          />
+          <meshStandardMaterial color="#e2e8f0" metalness={0.88} roughness={0.2} />
         </mesh>
-        {/* Counter-Rotating Gravity Wheel */}
         <mesh rotation={[Math.PI / 2, 0, 0]}>
           <torusGeometry args={[5.5, 0.45, 16, 32]} />
-          <meshStandardMaterial
-            color="#475569"
-            metalness={0.9}
-            roughness={0.3}
-          />
+          <meshStandardMaterial color="#475569" metalness={0.9} roughness={0.3} />
         </mesh>
-        {/* High-Gain Quantum Antenna Dish */}
         <mesh position={[0, 7.8, 0]} rotation={[-0.4, 0.2, 0]}>
           <coneGeometry args={[2.8, 1.2, 16, 1, true]} />
-          <meshStandardMaterial
-            color="#eab308"
-            metalness={0.95}
-            roughness={0.1}
-            side={THREE.DoubleSide}
-          />
+          <meshStandardMaterial color="#eab308" metalness={0.95} roughness={0.1} side={THREE.DoubleSide} />
         </mesh>
-        {/* Docking Gantry Guidance Beacon */}
         <mesh position={[0, -7.5, 0]}>
           <sphereGeometry args={[0.3, 8, 8]} />
           <meshBasicMaterial color="#f59e0b" transparent opacity={beaconBlink} />
