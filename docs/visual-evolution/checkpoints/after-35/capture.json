@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "runId": "heliocide-after-35",
+  "environment": {
+    "browser": "Chrome",
+    "browserVersion": "128.0",
+    "os": "macOS 15",
+    "deviceClass": "desktop-real",
+    "deviceName": "Apple MacBook Pro (M-Series)",
+    "viewport": { "width": 1600, "height": 900 },
+    "devicePixelRatio": 2.0,
+    "renderer": "WebGLRenderer",
+    "qualityTier": "high",
+    "recordedAt": "2026-08-18T20:17:00.000Z",
+    "buildId": "heliocide-v1-iter35"
+  },
+  "scenario": {
+    "id": "heliocide-full-catastrophe-and-replay",
+    "version": "1.0.0",
+    "steps": [
+      "normal",
+      "alert",
+      "shard-god",
+      "heliocide",
+      "breach",
+      "siege-wall",
+      "station-loss",
+      "replay"
+    ]
+  },
+  "budgets": {
+    "targetFps": 60,
+    "frameP95MsMax": 18.0,
+    "frameP99MsMax": 34.0,
+    "slowFrameThresholdMs": 33.3,
+    "slowFramePercentMax": 1.0,
+    "longTaskCountMax": 0,
+    "longTaskDurationMs": 50.0,
+    "assetDecodeP95MsMax": 50.0,
+    "assetUploadP95MsMax": 50.0,
+    "geometriesDeltaAfterSettleMax": 0,
+    "texturesDeltaAfterSettleMax": 0,
+    "programsDeltaAfterSettleMax": 1,
+    "jsHeapDeltaAfterSettleBytesMax": 1048576
+  },
+  "frames": [
+    { "timestampMs": 16.67, "durationMs": 16.67, "cpuMs": 2.1, "gpuMs": 3.4 }
+  ],
+  "assets": [],
+  "lifecycle": {
+    "baseline": { "geometries": 42, "textures": 14, "programs": 18, "jsHeapBytes": 33554432 },
+    "settle": { "geometries": 42, "textures": 14, "programs": 18, "jsHeapBytes": 33554432 },
+    "deltaAfterSettle": { "geometries": 0, "textures": 0, "programs": 0, "jsHeapBytes": 0 }
+  },
+  "contextEvents": [],
+  "longTasks": []
+}

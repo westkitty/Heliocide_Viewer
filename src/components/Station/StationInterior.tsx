@@ -87,48 +87,64 @@ export function StationInterior() {
 
   return (
     <group name="station-interior">
-      {/* 1. Main Observation Floor */}
+      {/* 1. Brushed Dark Titanium Modular Deck Plates */}
       <mesh position={[0, -0.05, 0]} receiveShadow>
         <boxGeometry args={[18, 0.1, 16]} />
         <meshStandardMaterial
-          color="#0b0f19"
-          metalness={0.7}
-          roughness={0.3}
+          color="#0f172a"
+          metalness={0.88}
+          roughness={0.22}
         />
       </mesh>
 
-      {/* Floor Guideline inlays */}
-      <mesh position={[0, 0.01, -1]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[1.5, 12]} />
+      {/* Non-Skid Rubber Polymer Floor Guideline Inlays */}
+      <mesh position={[0, 0.01, -0.5]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[1.8, 13]} />
         <meshStandardMaterial
-          color="#1e293b"
-          roughness={0.5}
+          color="#0284c7"
+          emissive="#0369a1"
+          emissiveIntensity={currentTime > 52.0 ? 0.1 : 0.35}
+          metalness={0.15}
+          roughness={0.8}
         />
       </mesh>
 
-      {/* 2. Panoramic Window Frame & Glass Facing Space (Z = -7.9) */}
+      {/* Lateral Floor Hazard Caution Inlays */}
+      {[-6, 6].map((xPos, idx) => (
+        <mesh key={idx} position={[xPos, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[0.4, 14]} />
+          <meshStandardMaterial
+            color="#eab308"
+            metalness={0.3}
+            roughness={0.6}
+          />
+        </mesh>
+      ))}
+
+      {/* 2. Anodized Titanium Window Arch & Structural Braces (Z = -7.9) */}
       <group position={[0, 3.5, -7.9]}>
         {/* Upper Arch Frame */}
         <mesh position={[0, 3.8, 0]}>
           <boxGeometry args={[18, 0.8, 0.6]} />
-          <meshStandardMaterial color="#1e293b" metalness={0.8} roughness={0.3} />
+          <meshStandardMaterial color="#1e293b" metalness={0.92} roughness={0.18} />
         </mesh>
-        {/* Left / Right Window Pillars */}
+        {/* Left / Right Heavy Window Pillars */}
         <mesh position={[-8.5, 0, 0]}>
           <boxGeometry args={[1.0, 7.5, 0.6]} />
-          <meshStandardMaterial color="#1e293b" metalness={0.8} roughness={0.3} />
+          <meshStandardMaterial color="#1e293b" metalness={0.92} roughness={0.18} />
         </mesh>
         <mesh position={[8.5, 0, 0]}>
           <boxGeometry args={[1.0, 7.5, 0.6]} />
-          <meshStandardMaterial color="#1e293b" metalness={0.8} roughness={0.3} />
+          <meshStandardMaterial color="#1e293b" metalness={0.92} roughness={0.18} />
         </mesh>
+        {/* Chamfered Structural Intermediate Ribs */}
         <mesh position={[-3, 0, 0]}>
           <boxGeometry args={[0.3, 7.5, 0.5]} />
-          <meshStandardMaterial color="#334155" metalness={0.9} roughness={0.2} />
+          <meshStandardMaterial color="#334155" metalness={0.95} roughness={0.15} />
         </mesh>
         <mesh position={[3, 0, 0]}>
           <boxGeometry args={[0.3, 7.5, 0.5]} />
-          <meshStandardMaterial color="#334155" metalness={0.9} roughness={0.2} />
+          <meshStandardMaterial color="#334155" metalness={0.95} roughness={0.15} />
         </mesh>
         {/* Transparent Reinforced Observation Glass */}
         <mesh>
@@ -144,28 +160,40 @@ export function StationInterior() {
         </mesh>
       </group>
 
-      {/* 3. Ceiling with Reinforced Structural Trusses */}
+      {/* 3. Ceiling with Reinforced Structural Trusses & Conduit Lines */}
       <mesh position={[0, 7.0, 0]}>
         <boxGeometry args={[18, 0.2, 16]} />
-        <meshStandardMaterial color="#0f172a" roughness={0.5} />
+        <meshStandardMaterial color="#0b0f19" metalness={0.7} roughness={0.4} />
       </mesh>
       {[-5, 0, 5].map((zPos, i) => (
-        <mesh key={i} position={[0, 6.8, zPos]}>
-          <boxGeometry args={[17.8, 0.3, 0.4]} />
-          <meshStandardMaterial color="#1e293b" metalness={0.85} roughness={0.2} />
-        </mesh>
+        <group key={i} position={[0, 6.7, zPos]}>
+          {/* Main Transverse Gantry Beam */}
+          <mesh>
+            <boxGeometry args={[17.8, 0.35, 0.45]} />
+            <meshStandardMaterial color="#1e293b" metalness={0.9} roughness={0.2} />
+          </mesh>
+          {/* Conduit Utility Lines */}
+          <mesh position={[0, -0.22, 0.15]} rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.04, 0.04, 17.6, 8]} />
+            <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.3} />
+          </mesh>
+          <mesh position={[0, -0.22, -0.15]} rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.03, 0.03, 17.6, 8]} />
+            <meshStandardMaterial color="#f59e0b" metalness={0.6} roughness={0.4} />
+          </mesh>
+        </group>
       ))}
 
-      {/* 4. Left Wall with Diagnostic Monitors */}
+      {/* 4. Left Wall with Diagnostic Monitors & Composite Paneling */}
       <mesh position={[-8.9, 3.5, 0]}>
         <boxGeometry args={[0.2, 7.0, 16]} />
-        <meshStandardMaterial color="#0f172a" roughness={0.4} />
+        <meshStandardMaterial color="#0f172a" metalness={0.6} roughness={0.4} />
       </mesh>
       {/* Wall Diagnostic Terminals */}
       <group position={[-8.7, 3.0, -1]}>
         <mesh>
           <boxGeometry args={[0.1, 1.8, 3.5]} />
-          <meshStandardMaterial color="#0284c7" emissive="#0369a1" emissiveIntensity={0.6} />
+          <meshStandardMaterial color="#0284c7" emissive="#0369a1" emissiveIntensity={0.6} metalness={0.8} roughness={0.2} />
         </mesh>
         <Text
           position={[0.1, 0.5, 0]}
@@ -180,7 +208,7 @@ export function StationInterior() {
       {/* 5. Right Wall with Structural Breach Bulkhead */}
       <mesh position={[8.9, 3.5, -4]}>
         <boxGeometry args={[0.2, 7.0, 8]} />
-        <meshStandardMaterial color="#0f172a" roughness={0.4} />
+        <meshStandardMaterial color="#0f172a" metalness={0.6} roughness={0.4} />
       </mesh>
 
       {/* Dynamic Rupture Bulkhead Section */}
@@ -189,8 +217,8 @@ export function StationInterior() {
           <boxGeometry args={[0.3, 5.0, 4.5]} />
           <meshStandardMaterial
             color={currentTime > 78.0 ? '#451a03' : '#1e293b'}
-            metalness={0.8}
-            roughness={0.3}
+            metalness={0.85}
+            roughness={0.28}
           />
         </mesh>
         {currentTime > 78.0 && (
@@ -212,16 +240,16 @@ export function StationInterior() {
       {/* 6. Back Wall & Evacuation Corridor (Z = 7.9) */}
       <mesh position={[-5.5, 3.5, 7.9]}>
         <boxGeometry args={[7.0, 7.0, 0.2]} />
-        <meshStandardMaterial color="#0f172a" roughness={0.4} />
+        <meshStandardMaterial color="#0f172a" metalness={0.6} roughness={0.4} />
       </mesh>
       <mesh position={[5.5, 3.5, 7.9]}>
         <boxGeometry args={[7.0, 7.0, 0.2]} />
-        <meshStandardMaterial color="#0f172a" roughness={0.4} />
+        <meshStandardMaterial color="#0f172a" metalness={0.6} roughness={0.4} />
       </mesh>
       {/* Corridor Overhead Arch */}
       <mesh position={[0, 5.5, 7.9]}>
         <boxGeometry args={[4.0, 3.0, 0.2]} />
-        <meshStandardMaterial color="#1e293b" roughness={0.3} />
+        <meshStandardMaterial color="#1e293b" metalness={0.85} roughness={0.25} />
       </mesh>
 
       {/* Evacuation Signage */}

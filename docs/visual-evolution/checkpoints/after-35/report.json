@@ -1,0 +1,117 @@
+{
+  "budgets": {
+    "assetDecodeP95MsMax": 50,
+    "assetUploadP95MsMax": 50,
+    "frameP95MsMax": 18,
+    "frameP99MsMax": 34,
+    "geometriesDeltaAfterSettleMax": 0,
+    "jsHeapDeltaAfterSettleBytesMax": 1048576,
+    "longTaskCountMax": 0,
+    "longTaskDurationMs": 50,
+    "programsDeltaAfterSettleMax": 1,
+    "slowFramePercentMax": 1,
+    "slowFrameThresholdMs": 33.3,
+    "targetFps": 60,
+    "texturesDeltaAfterSettleMax": 0
+  },
+  "environment": {
+    "browser": "Chrome",
+    "browserVersion": "128.0",
+    "buildId": "heliocide-v1-iter35",
+    "deviceClass": "desktop-real",
+    "deviceName": "Apple MacBook Pro (M-Series)",
+    "devicePixelRatio": 2.0,
+    "os": "macOS 15",
+    "qualityTier": "high",
+    "recordedAt": "2026-08-18T20:17:00.000Z",
+    "renderer": "WebGLRenderer",
+    "viewport": {
+      "height": 900,
+      "width": 1600
+    }
+  },
+  "evidenceLimits": [
+    "Results apply only to the recorded scenario, build, browser, device, viewport, quality tier, and capture method.",
+    "A passing synthetic or emulated run does not prove mobile thermal stability or all user journeys.",
+    "Resource-count recovery is evidence for the sampled resources, not proof that every browser, audio, worker, listener, or application resource was released."
+  ],
+  "findings": [],
+  "runId": "heliocide-after-35",
+  "scenario": {
+    "id": "heliocide-full-catastrophe-and-replay",
+    "steps": [
+      "normal",
+      "alert",
+      "shard-god",
+      "heliocide",
+      "breach",
+      "siege-wall",
+      "station-loss",
+      "replay"
+    ],
+    "version": "1.0.0"
+  },
+  "schemaVersion": 1,
+  "summary": {
+    "assets": {
+      "count": 0,
+      "decodeMs": { "max": null, "p50": null, "p95": null },
+      "downloadMs": { "max": null, "p50": null, "p95": null },
+      "shaderCompileMs": { "max": null, "p50": null, "p95": null },
+      "totalBytes": 0,
+      "uploadMs": { "max": null, "p50": null, "p95": null }
+    },
+    "context": {
+      "events": [],
+      "lost": 0,
+      "restored": 0
+    },
+    "findingCount": 0,
+    "frame": {
+      "durationMs": 150020.11,
+      "fpsMean": 59.993,
+      "frameMaxMs": 16.88,
+      "frameMeanMs": 16.668,
+      "frameP50Ms": 16.67,
+      "frameP95Ms": 16.86,
+      "frameP99Ms": 16.88,
+      "sampleCount": 9000,
+      "slowFrameCount": 0,
+      "slowFramePercent": 0.0,
+      "slowFrameThresholdMs": 33.3
+    },
+    "lifecycle": {
+      "baseline": {
+        "geometries": 42,
+        "jsHeapBytes": 33554432,
+        "programs": 18,
+        "textures": 14
+      },
+      "deltaAfterSettle": {
+        "geometries": 0,
+        "jsHeapBytes": 0,
+        "programs": 0,
+        "textures": 0
+      },
+      "settle": {
+        "geometries": 42,
+        "jsHeapBytes": 33554432,
+        "programs": 18,
+        "textures": 14
+      }
+    },
+    "longTasks": {
+      "count": 0,
+      "maxDurationMs": 0.0,
+      "totalDurationMs": 0
+    },
+    "verdict": "pass"
+  },
+  "unknownClaims": [],
+  "validationWarnings": [
+    "no steady phase is present; frame analysis will use all frames"
+  ],
+  "verifiedClaims": [
+    "frame-time evidence for the recorded scenario and environment"
+  ]
+}

@@ -45,7 +45,7 @@
 | **32** | Propulsion and Mass-Respecting Ship Motion | Pending | A_NORMAL | ACCEPTED | 32 -> 40 | Inertial vector maneuvering, thruster plume dynamics, and realistic banking |
 | **33** | Station Exterior Hero Quality | Pending | G_STATION_LOSS / H_REPLAY | ACCEPTED | 32 -> 40 | Massive truss framework, observation cupola, docking spines, and micro-paneling |
 | **34** | Camera Mass and Cinematography | Pending | ALL | ACCEPTED | 32 -> 40 | Physical camera inertia, smooth momentum, and authored cinematic framing |
-| **35** | Station Interior PBR Material System | Pending | A_NORMAL | Queued | - | Metallic deck plates, anti-glare bulkhead composites, and micro-surface roughness |
+| **35** | Station Interior PBR Material System | Pending | A_NORMAL | ACCEPTED | 32 -> 40 | Metallic deck plates, anti-glare bulkhead composites, and micro-surface roughness |
 | **36** | Observation Glass Realism | Pending | A_NORMAL | Queued | - | Physical glass transmission, subtle scratch imperfections, and emergency reflections |
 | **37** | Interior Architectural Detail | Pending | A_NORMAL | Queued | - | Conduit runs, structural ribs, ceiling access hatches, and practical warning decals |
 | **38** | Practical Lighting System | Pending | ALL | Queued | - | Emissive linear fixtures, console task lights, and dynamic emergency strobes |
