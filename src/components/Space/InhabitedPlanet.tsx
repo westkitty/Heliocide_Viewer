@@ -17,7 +17,6 @@ const PlanetVertexShader = `
     vNormal = normalize(normalMatrix * normal);
     vec4 worldPos = modelMatrix * vec4(position, 1.0);
     
-    // Prolate tidal bulge stretching toward the gravitational singularity
     if (uTidalStripping > 0.001) {
       vec3 toBH = normalize(uStarPosition - worldPos.xyz);
       vec3 wNorm = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
@@ -37,7 +36,6 @@ const PlanetFragmentShader = `
   uniform sampler2D uCloudMap;
   uniform vec3 uStarPosition;
   uniform float uCurrentTime;
-  uniform float uCityBlackout;
   uniform float uCloudOffset;
 
   varying vec2 vUv;
@@ -69,6 +67,13 @@ const PlanetFragmentShader = `
 
   vec3 F_Schlick(float cosTheta, vec3 F0) {
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+  }
+
+  // Hash function for regional grid timing
+  float hash21(vec2 p) {
+    p = fract(p * vec2(234.34, 435.345));
+    p += dot(p, p + 34.23);
+    return fract(p.x * p.y);
   }
 
   void main() {
@@ -122,7 +127,35 @@ const PlanetFragmentShader = `
 
     vec3 dayLit = directLight;
     float cityActivation = smoothstep(0.06, -0.06, rawNdotL);
-    vec3 nightLit = night.rgb * (1.0 - uCityBlackout) * cityActivation * 2.6 + ambientSpace;
+
+    // Staggered regional civilization failure & emergency beacon progression
+    vec2 gridRegion = floor(vUv * vec2(24.0, 12.0));
+    float regionDelay = hash21(gridRegion) * 32.0; // 0 to 32s stagger
+    float failStart = 52.0 + regionDelay;
+    
+    float sectorSurvival = 1.0;
+    float emergencyBeacon = 0.0;
+
+    if (uCurrentTime >= failStart) {
+      float failProgress = (uCurrentTime - failStart) / 6.0;
+      if (failProgress < 1.0) {
+        // Brownout instability, surging and catastrophic flicker
+        float flicker = sin(uCurrentTime * 45.0 + hash21(gridRegion) * 10.0);
+        float overvoltage = smoothstep(0.0, 0.2, failProgress) * (1.0 - smoothstep(0.2, 0.8, failProgress)) * 1.8;
+        sectorSurvival = max(0.0, 1.0 - failProgress + overvoltage) * (flicker > -0.2 ? 1.0 : 0.05);
+      } else {
+        sectorSurvival = 0.0;
+        // Periodic emergency distress transponder pulse on major cities
+        if (night.r > 0.6 && uCurrentTime < 110.0) {
+          float pulse = sin((uCurrentTime - failStart) * 3.0) * 0.5 + 0.5;
+          emergencyBeacon = pow(pulse, 8.0) * 2.2;
+        }
+      }
+    }
+
+    vec3 activeCity = night.rgb * sectorSurvival;
+    vec3 beaconLight = vec3(1.0, 0.15, 0.1) * emergencyBeacon;
+    vec3 nightLit = (activeCity + beaconLight) * cityActivation * 2.6 + ambientSpace;
 
     float rim = 1.0 - max(0.0, dot(N, V));
     vec3 rayleighSky = vec3(0.18, 0.58, 1.0);
@@ -211,7 +244,6 @@ const AtmosphereVertexShader = `
   void main() {
     vec4 worldPos = modelMatrix * vec4(position, 1.0);
 
-    // Severe atmospheric stripping elongation
     if (uTidalStripping > 0.001) {
       vec3 toBH = normalize(uStarPosition - worldPos.xyz);
       vec3 wNorm = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
@@ -252,7 +284,7 @@ const AtmosphereFragmentShader = `
 
     vec3 rayleighColor = vec3(0.15, 0.55, 1.0);
     vec3 sunsetColor = vec3(1.0, 0.42, 0.12);
-    vec3 strippingColor = vec3(0.0, 0.95, 1.0); // Ionized ripped exosphere plasma
+    vec3 strippingColor = vec3(0.0, 0.95, 1.0);
     
     vec3 atmosBase = mix(rayleighColor, sunsetColor, sunsetFactor);
     atmosBase = mix(atmosBase, strippingColor, uTidalStripping * 0.75);
@@ -473,7 +505,6 @@ export function InhabitedPlanet() {
     uCloudMap: { value: cloudTexture },
     uStarPosition: { value: new THREE.Vector3(0, 0, -180) },
     uCurrentTime: { value: 0 },
-    uCityBlackout: { value: 0 },
     uCloudOffset: { value: 0 },
     uTidalStripping: { value: 0 }
   }), [planetTexture, nightTexture, cloudTexture]);
@@ -501,24 +532,17 @@ export function InhabitedPlanet() {
     const currentTime = useTimelineStore.getState().currentTime;
     materialRef.current.uniforms.uCurrentTime.value = currentTime;
 
-    let blackout = 0;
     let tidal = 0;
-
     if (currentTime < 52.0) {
-      blackout = 0;
       tidal = 0;
     } else if (currentTime < 78.0) {
       const t = (currentTime - 52.0) / 26.0;
-      const flicker = Math.sin(currentTime * 25.0) > 0 ? 0.3 : 0.9;
-      blackout = Math.min(1.0, t * flicker + t * 0.5);
       tidal = t * 0.65;
     } else {
-      blackout = 1.0;
       const postT = Math.min(1.0, (currentTime - 78.0) / 40.0);
       tidal = THREE.MathUtils.lerp(0.65, 1.0, postT);
     }
 
-    materialRef.current.uniforms.uCityBlackout.value = blackout;
     materialRef.current.uniforms.uTidalStripping.value = tidal;
     cloudMaterialRef.current.uniforms.uTidalStripping.value = tidal;
     atmosMaterialRef.current.uniforms.uTidalStripping.value = tidal;
@@ -550,7 +574,7 @@ export function InhabitedPlanet() {
 
   return (
     <group ref={planetGroupRef} position={[65, -25, -120]}>
-      {/* 1. Physically-Shaded Surface with Tidal Bulge Deformation */}
+      {/* 1. Physically-Shaded Surface with Staggered Regional Civilization Blackout */}
       <mesh>
         <sphereGeometry args={[24, 64, 64]} />
         <shaderMaterial
