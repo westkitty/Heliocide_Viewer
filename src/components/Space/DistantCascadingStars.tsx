@@ -3,58 +3,92 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useTimelineStore } from '../../store/timelineStore';
 
-const TOTAL_STARS = 3500;
+const TOTAL_STARS = 4500;
+
+// Deterministic Linear Congruential PRNG
+function createSeededRNG(seed = 17618934) {
+  let s = seed;
+  return () => {
+    s = (s * 1664525 + 1013904223) % 4294967296;
+    return s / 4294967296;
+  };
+}
+
+// Astronomical Harvard spectral types and B-V color temperatures
+const SPECTRAL_CLASSES = [
+  { weight: 0.04, color: new THREE.Color('#9bb0ff'), name: 'O/B Blue Giant' },
+  { weight: 0.14, color: new THREE.Color('#cad7ff'), name: 'A White' },
+  { weight: 0.20, color: new THREE.Color('#f8f9ff'), name: 'F Yellow-White' },
+  { weight: 0.30, color: new THREE.Color('#fff4e8'), name: 'G Solar Yellow' },
+  { weight: 0.22, color: new THREE.Color('#ffd2a1'), name: 'K Orange' },
+  { weight: 0.10, color: new THREE.Color('#ffb380'), name: 'M Red Dwarf' }
+];
 
 export function DistantCascadingStars() {
   const pointsRef = useRef<THREE.Points>(null);
-  const currentTime = useTimelineStore((s) => s.currentTime);
 
-  // Generate star field with assigned cluster regions and extinction timing
-  const { positions, baseColors, extinctionTimes } = useMemo(() => {
+  // Deterministically generate astronomical starfield with galactic structure and realistic magnitudes
+  const { positions, baseColors, sizes, extinctionTimes } = useMemo(() => {
+    const rng = createSeededRNG(987654321);
+
     const pos = new Float32Array(TOTAL_STARS * 3);
     const col = new Float32Array(TOTAL_STARS * 3);
+    const sz = new Float32Array(TOTAL_STARS);
     const ext = new Float32Array(TOTAL_STARS);
 
     for (let i = 0; i < TOTAL_STARS; i++) {
-      // Distribute stars on a celestial sphere of radius 600 - 800
-      const radius = 600 + Math.random() * 200;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(Math.random() * 2 - 1);
+      // Celestial sphere radius (700 to 1100 units)
+      const radius = 700 + rng() * 400;
 
-      const x = radius * Math.sin(phi) * Math.cos(theta);
-      const y = radius * Math.sin(phi) * Math.sin(theta);
-      const z = radius * Math.cos(phi);
+      // Astronomical galactic coordinate concentration:
+      // Galactic plane angle ~ 25 degrees tilt
+      let galacticLat = (rng() - 0.5) * Math.PI;
+      // Weight distribution toward galactic plane (concentrated in mid-latitudes)
+      if (rng() < 0.65) {
+        galacticLat = Math.pow(rng() - 0.5, 3) * Math.PI * 1.8;
+      }
+      const galacticLon = rng() * Math.PI * 2;
+
+      // Transform galactic coordinates to cartesian sphere
+      const x = radius * Math.cos(galacticLat) * Math.cos(galacticLon);
+      const y = radius * Math.sin(galacticLat);
+      const z = radius * Math.cos(galacticLat) * Math.sin(galacticLon);
 
       pos[i * 3] = x;
       pos[i * 3 + 1] = y;
       pos[i * 3 + 2] = z;
 
-      // Color variation: white, faint blue, amber, soft violet
-      const colorType = Math.random();
-      let c: THREE.Color;
-      if (colorType < 0.6) {
-        c = new THREE.Color('#ffffff');
-      } else if (colorType < 0.8) {
-        c = new THREE.Color('#93c5fd'); // soft blue
-      } else if (colorType < 0.95) {
-        c = new THREE.Color('#fde68a'); // soft amber
-      } else {
-        c = new THREE.Color('#c4b5fd'); // soft violet
+      // Apparent magnitude distribution (power law: vast majority are faint sub-pixels, rare bright heroes)
+      const magRoll = rng();
+      const magnitude = Math.pow(magRoll, 3.2); // 0 (faint) to 1 (bright)
+      sz[i] = THREE.MathUtils.lerp(1.2, 4.5, magnitude);
+
+      // Select spectral class based on cumulative probability
+      let specClass = SPECTRAL_CLASSES[3];
+      const roll = rng();
+      let cumWeight = 0;
+      for (const sc of SPECTRAL_CLASSES) {
+        cumWeight += sc.weight;
+        if (roll <= cumWeight) {
+          specClass = sc;
+          break;
+        }
       }
 
-      col[i * 3] = c.r;
-      col[i * 3 + 1] = c.g;
-      col[i * 3 + 2] = c.b;
+      // Modulate color intensity by apparent magnitude
+      const intensity = THREE.MathUtils.lerp(0.45, 1.25, magnitude);
+      col[i * 3] = specClass.color.r * intensity;
+      col[i * 3 + 1] = specClass.color.g * intensity;
+      col[i * 3 + 2] = specClass.color.b * intensity;
 
-      // Assign sector for the Siege Wall swath (extinction zone: theta between 0.2 and 2.4 radians)
-      const isInSiegeSector = theta > 0.2 && theta < 2.4 && Math.abs(y) < 350;
+      // Extinction zone for the Siege Wall swath (sector theta between 0.2 and 2.4 radians)
+      const theta = Math.atan2(z, x);
+      const isInSiegeSector = theta > 0.15 && theta < 2.45 && Math.abs(y) < 420;
 
       if (isInSiegeSector) {
-        // Cascade extinction between t=78s and t=115s sequentially based on angle
-        const normalizedAngle = (theta - 0.2) / 2.2;
-        ext[i] = 78.0 + normalizedAngle * 35.0 + (Math.random() * 4.0 - 2.0);
+        const normalizedAngle = (theta - 0.15) / 2.3;
+        ext[i] = 78.0 + normalizedAngle * 36.0 + (rng() * 4.0 - 2.0);
       } else {
-        // Unaffected or background stars
         ext[i] = 9999.0;
       }
     }
@@ -62,6 +96,7 @@ export function DistantCascadingStars() {
     return {
       positions: pos,
       baseColors: col,
+      sizes: sz,
       extinctionTimes: ext
     };
   }, []);
@@ -71,46 +106,33 @@ export function DistantCascadingStars() {
   useFrame(() => {
     if (!pointsRef.current) return;
     const geometry = pointsRef.current.geometry;
-    const colorAttr = geometry.attributes.color as THREE.BufferAttribute;
+    const colorAttr = geometry.attributes.color;
     if (!colorAttr) return;
 
-    let colorsModified = false;
+    const currentTime = useTimelineStore.getState().currentTime;
+    let needsUpdate = false;
 
     for (let i = 0; i < TOTAL_STARS; i++) {
       const extTime = extinctionTimes[i];
+      if (extTime >= 9999.0) continue;
 
       if (currentTime >= extTime) {
-        // Star has collapsed/extinguished
-        if (dynamicColors[i * 3] > 0 || dynamicColors[i * 3 + 1] > 0 || dynamicColors[i * 3 + 2] > 0) {
-          dynamicColors[i * 3] = 0;
-          dynamicColors[i * 3 + 1] = 0;
-          dynamicColors[i * 3 + 2] = 0;
-          colorsModified = true;
-        }
-      } else if (currentTime >= extTime - 1.5 && currentTime < extTime) {
-        // Star is flashing / collapsing right now (bright blue-white spike)
-        const flash = (currentTime - (extTime - 1.5)) / 1.5;
-        dynamicColors[i * 3] = 0.5 + flash * 2.0;
-        dynamicColors[i * 3 + 1] = 0.8 + flash * 3.0;
-        dynamicColors[i * 3 + 2] = 1.0 + flash * 4.0;
-        colorsModified = true;
+        // Star has collapsed/extinguished into the Siege Wall void
+        const fadeProgress = Math.min(1.0, (currentTime - extTime) / 3.0);
+        const factor = 1.0 - fadeProgress;
+
+        dynamicColors[i * 3] = baseColors[i * 3] * factor;
+        dynamicColors[i * 3 + 1] = baseColors[i * 3 + 1] * factor;
+        dynamicColors[i * 3 + 2] = baseColors[i * 3 + 2] * factor;
+        needsUpdate = true;
       } else {
-        // Normal brightness
-        if (
-          dynamicColors[i * 3] !== baseColors[i * 3] ||
-          dynamicColors[i * 3 + 1] !== baseColors[i * 3 + 1] ||
-          dynamicColors[i * 3 + 2] !== baseColors[i * 3 + 2]
-        ) {
-          dynamicColors[i * 3] = baseColors[i * 3];
-          dynamicColors[i * 3 + 1] = baseColors[i * 3 + 1];
-          dynamicColors[i * 3 + 2] = baseColors[i * 3 + 2];
-          colorsModified = true;
-        }
+        dynamicColors[i * 3] = baseColors[i * 3];
+        dynamicColors[i * 3 + 1] = baseColors[i * 3 + 1];
+        dynamicColors[i * 3 + 2] = baseColors[i * 3 + 2];
       }
     }
 
-    if (colorsModified) {
-      colorAttr.copyArray(dynamicColors);
+    if (needsUpdate) {
       colorAttr.needsUpdate = true;
     }
   });
@@ -120,23 +142,25 @@ export function DistantCascadingStars() {
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
-          count={TOTAL_STARS}
-          array={positions}
-          itemSize={3}
+          args={[positions, 3]}
         />
         <bufferAttribute
           attach="attributes-color"
-          count={TOTAL_STARS}
-          array={dynamicColors}
-          itemSize={3}
+          args={[dynamicColors, 3]}
+        />
+        <bufferAttribute
+          attach="attributes-size"
+          args={[sizes, 1]}
         />
       </bufferGeometry>
       <pointsMaterial
-        size={2.4}
+        size={2.2}
         vertexColors
         transparent
-        opacity={0.9}
+        opacity={0.95}
         sizeAttenuation={false}
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
       />
     </points>
   );
