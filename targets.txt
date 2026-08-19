@@ -1,0 +1,100 @@
+1. [BLOCKER] Stop using first-person walking as the default/primary interaction mode for an observatory/forensic viewer.
+2. [BLOCKER] Remove Pointer Lock from the normal observation flow so the mouse remains available for UI controls.
+3. [BLOCKER] Eliminate the state where visible DOM controls look clickable while Pointer Lock makes them inaccessible.
+4. [MAJOR] Resolve Escape-key ownership so Pointer Lock release, modal closing, and fullscreen/browser behavior do not collide unpredictably.
+5. [MAJOR] Remove browser Pointer Lock instruction banners from the normal product workflow by removing the need for Pointer Lock in that workflow.
+6. [MAJOR] Provide an explicit, visible enter/exit affordance if optional Walkthrough mouse-look remains.
+7. [MAJOR] Eliminate the repeated lock -> Escape -> click UI -> re-lock interaction loop.
+8. [MAJOR] Show an unambiguous in-app interaction-state indicator: Observation, Walkthrough, Cinematic, or Forensic Replay.
+9. [MAJOR] Make all primary viewer functions operable without requiring hidden keyboard knowledge.
+10. [BLOCKER] Implement a coherent mode model separating Observation, optional Walkthrough, Cinematic playback, and Forensic Replay instead of letting them compete simultaneously.
+11. [MAJOR] Prevent unconstrained first-person camera roll from rotating the scene into unreadable orientations.
+12. [MAJOR] Add collision/safe-boundary behavior that prevents the camera from clipping into station walls, frames, and large occluding geometry.
+13. [MAJOR] Prevent the user camera from accidentally losing the primary celestial event during critical phases without any recovery cue.
+14. [MAJOR] Add a clear Recenter / Focus Event action that restores a useful observation composition immediately.
+15. [MAJOR] Add an off-screen event indicator or equivalent cue when the collapse/primary event is outside the current view.
+16. [MAJOR] Define phase-aware safe framing so critical events remain observable without forcibly hijacking the camera every second.
+17. [MAJOR] Constrain optional interior locomotion to meaningful station space rather than allowing awkward or visually broken viewpoints.
+18. [MAJOR] Replace game-like default locomotion with a viewer-appropriate drag/orbit/free-look camera; retain Walkthrough only as an optional secondary mode if it adds real value.
+19. [MAJOR] Smooth and explain the handoff into authored Cinematic mode instead of abruptly changing camera ownership.
+20. [MAJOR] Recompose the final cinematic so debris/geometry does not randomly compete with the black hole, planet, terminal message, and containment event.
+21. [MAJOR] Reduce the replay/timeline panel height; it consumes too much of a short laptop viewport.
+22. [MAJOR] Reduce combined top-HUD + bottom-control occupancy so the 3D event remains the dominant surface.
+23. [MAJOR] Add a compact/collapsed replay-control state that preserves transport access without permanently covering the scene.
+24. [MINOR] Represent phase duration/importance more honestly; equal-width phase buttons should not imply equal temporal spans when phases differ.
+25. [MAJOR] Integrate phase/chapter markers into the timeline itself instead of requiring a separate full row of large phase buttons.
+26. [MINOR] Improve precise scrubbing with a handle tooltip/readout tied directly to the current timeline position.
+27. [MINOR] Label playback speed as speed; bare 0.5x/1x/2x buttons should have clearer hierarchy and state.
+28. [MAJOR] Make Play/Pause the clear primary transport action instead of giving Dossier, Restart, speed, and camera actions nearly equal visual weight.
+29. [MAJOR] Separate camera-mode selection from timeline transport instead of mixing unrelated controls into one dense panel.
+30. [MAJOR] At terminal completion, transition the controls into an explicit post-event forensic state rather than leaving the interface looking like a still-live station console.
+31. [MAJOR] Reduce the number of simultaneously persistent bordered panels; the scene is boxed in by UI chrome.
+32. [MAJOR] Stop the audio-enable banner from occupying the same top-center attention channel as the phase narrative.
+33. [MAJOR] Do not let the audio activation prompt nag across multiple phases after playback has begun; integrate activation into a deliberate start flow or compact status.
+34. [MINOR] Simplify the station identity panel so orbit/target/population data scan cleanly rather than reading as one dense line.
+35. [MAJOR] Rework the top-right telemetry block so Hull, Orbit, Life Support, and Q-Comms are quickly scannable and not crammed together.
+36. [MAJOR] Shorten or progressively disclose phase narration; tiny multi-line exposition is difficult to read while the scene is moving.
+37. [MAJOR] Remove duplicate narrative channels when the same event is simultaneously described by top HUD copy and large in-world alert text.
+38. [MINOR] Give the Settings action a clear accessible name/tooltip and stronger affordance than an isolated gear glyph.
+39. [MINOR] Rationalize Tactical Console access so the visible button and E shortcut communicate one coherent open/close state instead of redundant mechanisms.
+40. [MAJOR] Refine the HUD from a developer/debug-panel appearance into a deliberate Administration observational instrument without sacrificing readability.
+41. [MAJOR] Prevent crew names, roles, tactical alerts, and hologram labels from overlapping each other in the 3D view.
+42. [MAJOR] Keep important world labels camera-readable; do not allow text to become mirrored, reversed, or rotated into illegibility as the camera rolls.
+43. [MAJOR] Prevent world labels from intersecting geometry or being half-occluded in ways that make them look broken.
+44. [MAJOR] Normalize world-label scaling so labels do not balloon to absurd size as the camera approaches.
+45. [MAJOR] Remove redundant in-world alert copy when the HUD already communicates the same state.
+46. [MAJOR] Ensure world-space labels have intentional occlusion/depth rules rather than drawing through everything or disappearing unpredictably.
+47. [MAJOR] Recompose the large final CONTAINMENT ACHIEVED title so it does not collide with the black hole, planet, rings, or debris.
+48. [MINOR] Increase contrast/readability of the terminal subheading over the star field.
+49. [MAJOR] Reserve all-caps and wide letter spacing for short labels/headings; improve body/status typography for fast reading.
+50. [MAJOR] Define semantic color roles so cyan/teal/blue/green are not interchangeable decoration and warning/degraded/offline states are unmistakable without relying on color alone.
+51. [MAJOR] Raise station-interior geometry above obvious blockout/prototype quality; the concept currently outruns the environment fidelity.
+52. [MAJOR] Improve station material response so surfaces stop reading as flat plastic/black boxes under simple lighting.
+53. [MAJOR] Make station lighting evolve with the catastrophe: alert lighting, power instability, emergency illumination, darkness, and failure should be visible consequences.
+54. [MAJOR] Improve or intentionally stylize crew models; the current mannequin/robot appearance clashes with the seriousness of the event.
+55. [MAJOR] Give crew behavior an escalating emergency arc or remove the implication of calm normal operation during catastrophic failure.
+56. [BLOCKER] Make visible station damage correlate with degrading Hull integrity instead of leaving telemetry and geometry disconnected.
+57. [BLOCKER] Hull 0 must not coexist with a visually pristine/functional station interior.
+58. [MAJOR] Make the reported station breach/decompression legible as a concrete local event rather than mainly a text/state change.
+59. [MAJOR] Reduce huge featureless black surfaces and occluding masses that swallow the frame and read like missing content.
+60. [MAJOR] Improve scale/depth cues between station, star, planet, debris, and orbital elements so the system stops feeling miniature/toy-like.
+61. [MAJOR] Replace the generic black-disk + cyan-ring collapse look with a more specific, authored progression that communicates the star's catastrophic transformation.
+62. [MAJOR] Reduce overly perfect/symmetric accretion/lensing geometry when it makes the phenomenon look like a clean game ring instead of a violent astrophysical event.
+63. [MAJOR] Visually represent the gravitational/lensing/orbital instability described by the narrative instead of relying on text alone.
+64. [MAJOR] Give the inhabited planet visible consequences appropriate to the heliocide sequence rather than leaving it visually healthy throughout the catastrophe.
+65. [MAJOR] Make the Orbit telemetry decline correspond to actual visible orbital instability/motion rather than being only a number.
+66. [BLOCKER] When Phase F says a vast irregular starless blackness is erasing the physical sky, stop rendering a normal dense star field through that region.
+67. [BLOCKER] Stop depicting the physical Siege Wall as a clean circular/ring-like object; its physical representation must be irregular starless blackness.
+68. [MAJOR] Make sky erasure advance irregularly and spatially so the viewer can understand the containment boundary consuming visibility.
+69. [MAJOR] Keep schematic/tactical Siege Wall geometry inside clearly abstract instruments; never let a tactical diagram be mistaken for the physical wall outside the station.
+70. [MAJOR] Audit every decorative ring around the collapsed star and remove/reframe anything that visually reads as the Siege Wall when it is not.
+71. [MAJOR] Make phase escalation occur in the scene, not primarily in labels, percentages, and exposition.
+72. [MAJOR] Give Phase B a concrete visible precursor/anomaly consistent with repository canon instead of communicating the alert almost entirely through text.
+73. [MAJOR] Give Phase C's Shard God authority/identification beat a clear visual consequence or framing change consistent with CANON.md rather than only a heading change.
+74. [BLOCKER] Make Phase D HELIOCIDE the unmistakable central catastrophe; it currently reads smaller and more generic than the narrative stakes.
+75. [BLOCKER] Make Phase E cluster cascade/station breach visibly and causally affect the local station environment.
+76. [BLOCKER] Make Phase F Siege Wall emergence radically transform the sky composition in a way that matches the written description.
+77. [BLOCKER] Make Phase G Station Loss visibly transition from operating observatory to a lost/tumbling/failed observation platform rather than merely changing copy and camera mode.
+78. [MAJOR] Resolve the contradiction where Q-Comms is OFFLINE while the interface continues presenting perfect live omniscient telemetry/narration; change the source/presentation so it makes sense.
+79. [MAJOR] Re-time the terminal reveal: CONTAINMENT ACHIEVED appears around narrative time 129s while the timeline continues to 138s, creating an extended anticlimactic plateau.
+80. [MAJOR] Give the final seconds meaningful closure/progression or move the terminal reveal to the actual terminal beat; do not leave roughly nine seconds of static completion state by accident.
+81. [MAJOR] Make Reduced Motion cover camera roll, shake, cinematic motion, FOV pulses, chromatic aberration, shock effects, and other discomfort-producing presentation changes, not only one or two effects.
+82. [BLOCKER] Ensure primary operation is fully keyboard-usable without Pointer Lock trapping the user in the canvas interaction model.
+83. [MAJOR] Define clear focus ownership between canvas, timeline controls, settings, dossier, and tactical console; focus should never disappear into an ambiguous input state.
+84. [MAJOR] Give all interactive controls logical tab order, visible focus treatment, and predictable Enter/Space behavior.
+85. [MAJOR] Give icon-only controls proper accessible names and visible hover/focus explanations.
+86. [MAJOR] Add non-color encoding for red/green degraded/offline/healthy telemetry states.
+87. [MAJOR] Increase minimum readable text sizing for a 1360x652-class viewport and browser zoom scenarios.
+88. [BLOCKER] Implement a compact responsive layout for short-height laptop windows so the control panel does not crowd the actual experience off-screen.
+89. [MAJOR] Integrate audio activation into a keyboard-accessible startup/play flow; enabling sound must not require a separate confusing pointer interaction.
+90. [MAJOR] Clarify the role of subtitles/captions versus phase narration/telemetry and prevent those channels from overlapping or duplicating one another.
+91. [BLOCKER] Model interaction state explicitly: cursor state, Pointer Lock, camera mode, modal state, playback state, and forensic state must not form impossible or contradictory combinations.
+92. [BLOCKER] Drive phase consequences from a coherent source of truth so telemetry, station damage, celestial visuals, audio, camera behavior, and UI state cannot drift apart.
+93. [BLOCKER] At station loss, transition or disable station-dependent controls instead of leaving Tactical Console/settings/live-station affordances active as if the station still functions.
+94. [BLOCKER] Make audio pause/seek/scrub/restart behavior coherent: no stale scheduled cues, no phase-sting machine-gunning during scrubbing, no alarm continuing while paused, and no duplicate AudioContexts/nodes.
+95. [MAJOR] Keep Page Visibility/background behavior coherent across simulation, audio, and camera without silently auto-resuming against the user's prior intent.
+96. [BLOCKER] Preserve deterministic forensic replay by eliminating replay-critical wall-clock, frame-delta, and unseeded-random leakage from camera/world/audio presentation; do not fake determinism by tying locomotion to narrative time.
+97. [BLOCKER] Add real browser interaction coverage for the primary flow, including observation camera -> UI click -> timeline scrub -> dossier/settings -> resume viewing, plus optional Walkthrough entry/exit if retained.
+98. [MAJOR] Add representative visual-regression captures/checks at key phases and at the short-height viewport demonstrated in the recording; do not bless new baselines merely because the implementation changed.
+99. [BLOCKER] Use PASS only for checks actually executed against the final working tree. Typecheck/unit tests do not prove browser interaction, accessibility, audio, WebGL lifecycle, offline behavior, or visual regression.
+100. [BLOCKER] Produce a new end-to-end screen recording at approximately the same viewport class demonstrating the corrected interaction model and the full phase arc; use it as final visual acceptance evidence rather than relying on prose.

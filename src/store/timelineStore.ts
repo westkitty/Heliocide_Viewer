@@ -168,7 +168,7 @@ function getInitialStateFromURL() {
 
     // validate camera mode
     const VALID_CAMERA_MODES: CameraMode[] = ['WALKTHROUGH', 'OBSERVATION', 'CINEMATIC'];
-    let cameraMode: CameraMode = time >= 122.0 ? 'CINEMATIC' : 'WALKTHROUGH';
+    let cameraMode: CameraMode = time >= 122.0 ? 'CINEMATIC' : 'OBSERVATION';
     if (cameraParam && VALID_CAMERA_MODES.includes(cameraParam as CameraMode)) {
       cameraMode = cameraParam as CameraMode;
     }
@@ -198,7 +198,7 @@ export const useTimelineStore = create<TimelineStoreState>((set, get) => ({
   playbackRate: 1.0,
   currentPhase: initialURL.currentPhase ?? 'PHASE_A_NORMAL',
   isForensicUnlocked: (initialURL.currentTime ?? 0) >= TOTAL_EXPERIENCE_DURATION,
-  cameraMode: initialURL.cameraMode ?? 'WALKTHROUGH',
+  cameraMode: initialURL.cameraMode ?? 'OBSERVATION',
   tacticalModalOpen: initialURL.tacticalModalOpen ?? false,
   tacticalTab: initialURL.tacticalTab ?? 'OVERVIEW',
   audioUnlocked: false,
@@ -231,7 +231,7 @@ export const useTimelineStore = create<TimelineStoreState>((set, get) => ({
     } else {
       // Transition camera automatically to cinematic when station loss occurs during live playthrough
       let camMode = get().cameraMode;
-      if (nextPhase === 'PHASE_G_STATION_LOSS' && camMode === 'WALKTHROUGH' && !isForensicUnlocked) {
+      if (nextPhase === 'PHASE_G_STATION_LOSS' && (camMode === 'WALKTHROUGH' || camMode === 'OBSERVATION') && !isForensicUnlocked) {
         camMode = 'CINEMATIC';
       }
 

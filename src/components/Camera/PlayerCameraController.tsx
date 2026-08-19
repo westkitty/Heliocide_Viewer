@@ -225,11 +225,28 @@ export function CameraManager() {
     }
   });
 
+  const orbitRef = useRef<any>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Allow pressing 'R' to recenter
+      if (e.key === 'r' || e.key === 'R') {
+        if (orbitRef.current) {
+          orbitRef.current.target.set(0, 0, -100);
+          orbitRef.current.update();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   return (
     <>
       {cameraMode === 'WALKTHROUGH' && <PointerLockControls />}
       {(cameraMode === 'OBSERVATION' || cameraMode === 'FORENSIC_REPLAY') && (
         <OrbitControls
+          ref={orbitRef}
           makeDefault
           enableDamping
           enablePan={true}

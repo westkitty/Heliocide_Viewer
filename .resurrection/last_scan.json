@@ -3,14 +3,14 @@
     "available": true,
     "branch": "main",
     "dirty": true,
-    "head": "eb0695234717ffec2a264232ef7ae6c9d9533fa8",
-    "head_subject": "Hardening pass: deterministic physics, explicit memory allocation, lifecycle disposal, strict Vite targets, UI accessiblity",
+    "head": "a5574ea69e50a446c2895df34ac8d52b2d6142a8",
+    "head_subject": "fix(product): execution pass for interaction, visual canon, and ui footprint",
     "is_repo": true,
     "remote_url": "git@github.com:westkitty/Heliocide_Viewer.git",
     "repo_root": "/Users/andrew/heliocide_viewer",
     "staged_count": 1,
-    "tracked_modified_count": 21,
-    "untracked_count": 23
+    "tracked_modified_count": 3,
+    "untracked_count": 0
   },
   "identity": {
     "name": "heliocide_viewer",
@@ -33,16 +33,16 @@
     "Validate the project with the hinted run/dev command: npm run dev",
     "Validate the project with the hinted build command: npm run build"
   ],
-  "scan_timestamp": "2026-08-19T04:52:05+00:00",
+  "scan_timestamp": "2026-08-19T05:13:02+00:00",
   "scanner_version": "1.1.0",
   "signature": {
     "git_dirty": {
       "dirty": true,
       "staged_count": 1,
-      "tracked_modified_count": 21,
-      "untracked_count": 23
+      "tracked_modified_count": 3,
+      "untracked_count": 0
     },
-    "git_head": "eb0695234717ffec2a264232ef7ae6c9d9533fa8",
+    "git_head": "a5574ea69e50a446c2895df34ac8d52b2d6142a8",
     "project_type": "vite_app",
     "scanner_version": "1.1.0",
     "watched_files": {
