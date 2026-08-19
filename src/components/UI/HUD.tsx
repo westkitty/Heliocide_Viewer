@@ -1,16 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTimelineStore, computeSubsystems, PHASE_TIMELINE } from '../../store/timelineStore';
 import { soundSystem } from '../../audio/SoundSystem';
-import { Volume2, Settings, ShieldAlert, Crosshair, MousePointer2 } from "lucide-react";
+import { Volume2, Settings, ShieldAlert, MousePointer2 } from "lucide-react";
 import { AccessibilitySettingsModal } from './AccessibilitySettings';
 
 export function HUD() {
-  const [isLocked, setIsLocked] = useState(false);
-  useEffect(() => {
-    const handleLockChange = () => setIsLocked(!!document.pointerLockElement);
-    document.addEventListener('pointerlockchange', handleLockChange);
-    return () => document.removeEventListener('pointerlockchange', handleLockChange);
-  }, []);
+
   const currentTime = useTimelineStore((s) => s.currentTime);
   const currentPhase = useTimelineStore((s) => s.currentPhase);
   const audioUnlocked = useTimelineStore((s) => s.audioUnlocked);
@@ -18,6 +13,7 @@ export function HUD() {
   const setTacticalModalOpen = useTimelineStore((s) => s.setTacticalModalOpen);
   const activeSubtitle = useTimelineStore((s) => s.activeSubtitle);
   const accessibility = useTimelineStore((s) => s.accessibility);
+  const cameraMode = useTimelineStore((s) => s.cameraMode);
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const subsystems = computeSubsystems(currentTime);
@@ -105,6 +101,7 @@ export function HUD() {
         {/* Top Right: Subsystems & Action Buttons */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
           {/* Subsystems Readout */}
+          {subsystems.hullIntegrity > 0 ? (
           <div
             style={{
               backgroundColor: 'rgba(11, 17, 32, 0.85)',
@@ -135,8 +132,23 @@ export function HUD() {
               <strong style={{ color: subsystems.quantumComms ? '#10b981' : '#ef4444' }}>{subsystems.quantumComms ? 'ONLINE' : 'OFFLINE'}</strong>
             </div>
           </div>
+          ) : (
+            <div style={{
+              backgroundColor: 'rgba(11, 17, 32, 0.85)',
+              border: '1px solid #ef4444',
+              borderRadius: '6px',
+              padding: '10px 14px',
+              color: '#ef4444',
+              fontSize: '0.75rem',
+              fontWeight: 'bold',
+              letterSpacing: '0.1em'
+            }}>
+              ALL TELEMETRY LOST
+            </div>
+          )}
 
           {/* Action buttons */}
+          {subsystems.hullIntegrity > 0 && (
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
               onClick={() => { soundSystem.playUIClick(); setTacticalModalOpen(true); }}
@@ -172,6 +184,7 @@ export function HUD() {
               <Settings size={14} />
             </button>
           </div>
+          )}
         </div>
       </div>
 
@@ -219,6 +232,8 @@ export function HUD() {
       {/* Center Subtitles / Narrative Voice Log */}
       {accessibility.subtitles && activeSubtitle && (
         <div
+          aria-live="polite"
+          aria-atomic="true"
           style={{
             position: 'absolute',
             bottom: '120px',
@@ -240,8 +255,8 @@ export function HUD() {
         </div>
       )}
 
-      {/* Final Restrained Ending Banner (Phase G) */}
-      {currentPhase === 'PHASE_G_STATION_LOSS' && (
+      {/* Final Restrained Ending Banner */}
+      {currentTime >= 137.0 && (
         <div
           style={{
             position: 'absolute',
@@ -286,12 +301,15 @@ export function HUD() {
           gap: '12px'
         }}
       >
-        <span style={{ color: isLocked ? '#10b981' : '#ef4444', display: 'flex', alignItems: 'center', gap: '4px' }}>
-          {isLocked ? <Crosshair size={14} /> : <MousePointer2 size={14} />}
-          {isLocked ? 'CURSOR LOCKED' : 'CURSOR UNLOCKED'}
+        <span style={{ color: '#00e5ff', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <MousePointer2 size={14} />
+          {cameraMode === 'OBSERVATION' ? 'OBSERVATION MODE' : cameraMode === 'WALKTHROUGH' ? 'WALKTHROUGH MODE' : cameraMode === 'CINEMATIC' ? 'CINEMATIC MODE' : 'FORENSIC MODE'}
         </span>
         <span style={{ borderLeft: '1px solid #334155', paddingLeft: '12px' }}>
-          [WASD] Move &nbsp;|&nbsp; [Click Canvas] Look &nbsp;|&nbsp; [ESC] Unlock Cursor &nbsp;|&nbsp; [E] Tactical Console
+          {cameraMode === 'WALKTHROUGH' 
+            ? '[WASD] Move | [Click] Lock Look | [ESC] Free Cursor | [E] Dossier' 
+            : '[Drag] Orbit | [Scroll] Zoom | [E] Dossier'
+          }
         </span>
       </div>
 

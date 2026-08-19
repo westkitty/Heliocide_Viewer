@@ -44,21 +44,22 @@ export function TacticalDossierModal() {
         left: 0,
         width: '100vw',
         height: '100vh',
-        backgroundColor: 'rgba(3, 7, 18, 0.85)',
-        backdropFilter: 'blur(12px)',
+        backgroundColor: 'rgba(3, 7, 18, 0.2)',
+        backdropFilter: 'blur(2px)',
         zIndex: 50,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px'
+        padding: '24px',
+        pointerEvents: 'auto'
       }}
     >
       <div
         style={{
           width: '100%',
-          maxWidth: '1000px',
-          height: '85vh',
-          backgroundColor: '#0b1120',
+          maxWidth: '750px',
+          height: '65vh',
+          backgroundColor: 'rgba(11, 17, 32, 0.95)',
           border: '1px solid #1e293b',
           boxShadow: '0 0 50px rgba(0, 229, 255, 0.15)',
           borderRadius: '8px',
@@ -82,10 +83,10 @@ export function TacticalDossierModal() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <ShieldAlert size={22} color="#00e5ff" />
             <div>
-              <h2 id="tactical-modal-title" style={{ fontSize: '1.1rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+              <h2 id="tactical-modal-title" style={{ fontSize: '0.9rem', fontWeight: 600, letterSpacing: '0.05em' }}>
                 ADMINISTRATION TACTICAL TELEMETRY // STATION HV-88
               </h2>
-              <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+              <span style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: '#94a3b8' }}>
                 HAL'VEN CLUSTER OBSERVATION SECTOR — TIME INDEX: <TimeDisplay />
               </span>
             </div>
@@ -210,7 +211,7 @@ export function TacticalDossierModal() {
                   alignItems: 'center'
                 }}
               >
-                <div style={{ padding: '8px 12px', width: '100%', background: '#0f172a', fontSize: '0.75rem', color: '#00e5ff', borderBottom: '1px solid #1e293b' }}>
+                <div style={{ padding: '8px 12px', width: '100%', background: '#0f172a', fontSize: '0.7rem', letterSpacing: '0.05em', color: '#00e5ff', borderBottom: '1px solid #1e293b' }}>
                   ADMINISTRATION BIOMETRIC / SPECTRAL IDENTIFICATION SHEET // REF: 1761893423477
                 </div>
                 <img
@@ -218,7 +219,7 @@ export function TacticalDossierModal() {
                   alt="Shard God Official Reference Dossier Sheet"
                   style={{ width: '100%', height: 'auto', maxHeight: '420px', objectFit: 'contain' }}
                 />
-                <div style={{ padding: '8px 12px', width: '100%', fontSize: '0.75rem', color: '#94a3b8', background: '#0a0f1d' }}>
+                <div style={{ padding: '8px 12px', width: '100%', fontSize: '0.7rem', letterSpacing: '0.05em', color: '#94a3b8', background: '#0a0f1d' }}>
                   SOURCE RECORD: Primary Physical Authority Profile (StarSilk Continuity)
                 </div>
               </div>
@@ -226,10 +227,10 @@ export function TacticalDossierModal() {
               {/* Tactical Readout */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div style={{ padding: '16px', backgroundColor: '#0f172a', borderRadius: '6px', borderLeft: '4px solid #00e5ff' }}>
-                  <h3 style={{ fontSize: '1.1rem', color: '#00e5ff', marginBottom: '6px', textTransform: 'uppercase' }}>
+                  <h3 style={{ fontSize: '0.9rem', letterSpacing: '0.05em', color: '#00e5ff', marginBottom: '6px', textTransform: 'uppercase' }}>
                     AUTHORITY ENTITY: SHARD GOD
                   </h3>
-                  <div style={{ fontSize: '0.85rem', color: '#cbd5e1', lineHeight: '1.5' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#cbd5e1', lineHeight: '1.4' }}>
                     <strong>Classification:</strong> Cosmological Sovereign / Divine Physicality<br />
                     <strong>Anatomy:</strong> Matte near-black musculature, dense cyan crystalline dorsal crest, heavy tail, luminous cyan vascular channels, glowing optics.<br />
                     <strong>Status:</strong> Active Strike Execution (Hal'Ven Sector)
@@ -240,10 +241,10 @@ export function TacticalDossierModal() {
                   <h4 style={{ fontSize: '0.9rem', color: '#e2e8f0', marginBottom: '8px' }}>
                     TACTICAL ASSESSMENT & CAUSALITY
                   </h4>
-                  <p style={{ fontSize: '0.85rem', color: '#94a3b8', lineHeight: '1.6', marginBottom: '10px' }}>
+                  <p style={{ fontSize: '0.8rem', color: '#94a3b8', lineHeight: '1.4', marginBottom: '10px' }}>
                     At Year 170 during the final collapse at the Aureal Gate, the Drakken Empire weaponized programmable Starsilk. This provided the first empirical proof that the Shard God can be harmed.
                   </p>
-                  <p style={{ fontSize: '0.85rem', color: '#94a3b8', lineHeight: '1.6' }}>
+                  <p style={{ fontSize: '0.8rem', color: '#94a3b8', lineHeight: '1.4' }}>
                     The Shard God's response was instant and surgical: a disproportionate heliocide strike across the Hal'Ven Cluster, collapsing stellar cores into nascent singularities to establish the <strong>Siege Wall</strong> around Drakken territory.
                   </p>
                 </div>
@@ -261,22 +262,22 @@ export function TacticalDossierModal() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
                 <div style={{ padding: '16px', backgroundColor: '#0f172a', borderRadius: '6px', border: '1px solid #1e293b' }}>
-                  <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>PRIMARY STELLAR BODY</span>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#f8fafc', marginTop: '4px' }}>Hal'Ven Prime</div>
+                  <span style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: '#94a3b8' }}>PRIMARY STELLAR BODY</span>
+                  <div style={{ fontSize: '0.9rem', letterSpacing: '0.05em', fontWeight: 600, color: '#f8fafc', marginTop: '4px' }}>Hal'Ven Prime</div>
                   <HalVenStateDisplay />
                 </div>
 
                 <div style={{ padding: '16px', backgroundColor: '#0f172a', borderRadius: '6px', border: '1px solid #1e293b' }}>
-                  <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>INHABITED WORLD</span>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#f8fafc', marginTop: '4px' }}>Hal'Ven IV</div>
+                  <span style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: '#94a3b8' }}>INHABITED WORLD</span>
+                  <div style={{ fontSize: '0.9rem', letterSpacing: '0.05em', fontWeight: 600, color: '#f8fafc', marginTop: '4px' }}>Hal'Ven IV</div>
                   <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '4px' }}>
                     Population: 4.8 Billion // Orbital Radius: 1.2 AU
                   </div>
                 </div>
 
                 <div style={{ padding: '16px', backgroundColor: '#0f172a', borderRadius: '6px', border: '1px solid #1e293b' }}>
-                  <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>CURRENT PHASE</span>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#38bdf8', marginTop: '4px' }}>{currentPhase}</div>
+                  <span style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: '#94a3b8' }}>CURRENT PHASE</span>
+                  <div style={{ fontSize: '0.9rem', letterSpacing: '0.05em', fontWeight: 600, color: '#38bdf8', marginTop: '4px' }}>{currentPhase}</div>
                   <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '4px' }}>
                     Sector Quarantine Code: 0x7E-BLOOD-ECLIPSE
                   </div>
@@ -284,10 +285,10 @@ export function TacticalDossierModal() {
               </div>
 
               <div style={{ padding: '20px', backgroundColor: '#0f172a', borderRadius: '6px', border: '1px solid #1e293b' }}>
-                <h4 style={{ fontSize: '0.95rem', color: '#e2e8f0', marginBottom: '10px' }}>
+                <h4 style={{ fontSize: '0.8rem', color: '#e2e8f0', marginBottom: '10px' }}>
                   STATION HV-88 OBSERVATION LOG
                 </h4>
-                <p style={{ fontSize: '0.85rem', color: '#cbd5e1', lineHeight: '1.6' }}>
+                <p style={{ fontSize: '0.8rem', color: '#cbd5e1', lineHeight: '1.4' }}>
                   Observation platform positioned in high equatorial orbit above Hal'Ven IV. Mission: Monitoring stellar corona harmonics and peripheral trade corridor ingress. Telemetry linked to Administration Defense Central.
                 </p>
               </div>
@@ -297,7 +298,7 @@ export function TacticalDossierModal() {
           {tacticalTab === 'CLUSTER_MAP' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ padding: '16px', backgroundColor: '#0f172a', borderRadius: '6px', border: '1px solid #1e293b' }}>
-                <h3 style={{ fontSize: '1rem', color: '#38bdf8', marginBottom: '6px' }}>
+                <h3 style={{ fontSize: '0.8rem', color: '#38bdf8', marginBottom: '6px' }}>
                   TACTICAL INTERFACE SCHEMATIC // CONTAINMENT LATTICE MODEL
                 </h3>
                 <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
@@ -356,7 +357,7 @@ export function TacticalDossierModal() {
           )}
 
           {tacticalTab === 'TACTICAL_LOGS' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontFamily: 'monospace', fontSize: '0.85rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontFamily: 'monospace', fontSize: '0.8rem' }}>
               <div style={{ padding: '12px', backgroundColor: '#0f172a', borderRadius: '4px', borderLeft: '3px solid #38bdf8' }}>
                 <span style={{ color: '#64748b' }}>[T-00:00:00]</span> <strong>DISPATCH #9921:</strong> Station HV-88 operational. Solar output nominal.
               </div>

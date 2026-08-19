@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import { useTimelineStore } from '../../store/timelineStore';
+import { MathUtils } from 'three';
 import { TacticalConsole } from './TacticalConsole';
 import { NPCs } from './NPCs';
 import { DebrisField } from './DebrisField';
@@ -19,6 +20,9 @@ export function StationInterior() {
   const windowRimLightRef = useRef<THREE.DirectionalLight>(null);
   const consoleSpotlightRef = useRef<THREE.SpotLight>(null);
   const strobeGroupRef = useRef<THREE.Group>(null);
+  const structuralGroupRef = useRef<THREE.Group>(null);
+  const ceilingGroupRef = useRef<THREE.Group>(null);
+  const rearGroupRef = useRef<THREE.Group>(null);
 
   const currentTime = useTimelineStore((s) => s.currentTime);
 
@@ -112,6 +116,38 @@ export function StationInterior() {
         breachRef.current.position.x = breachProgress * 0.8;
         breachRef.current.position.y = breachProgress * 0.4;
         breachRef.current.rotation.z = breachProgress * 0.35;
+      }
+    }
+
+    if (currentTime >= 104.0) {
+      const t = Math.min(1.0, (currentTime - 104.0) / 20.0);
+      const ease = t * t;
+      if (structuralGroupRef.current) {
+        structuralGroupRef.current.position.x = MathUtils.lerp(0, -15.0, ease);
+        structuralGroupRef.current.rotation.y = MathUtils.lerp(0, -0.4, ease);
+        structuralGroupRef.current.rotation.z = MathUtils.lerp(0, -0.2, ease);
+      }
+      if (ceilingGroupRef.current) {
+        ceilingGroupRef.current.position.y = MathUtils.lerp(0, 18.0, ease);
+        ceilingGroupRef.current.rotation.x = MathUtils.lerp(0, -0.3, ease);
+        ceilingGroupRef.current.rotation.z = MathUtils.lerp(0, 0.2, ease);
+      }
+      if (rearGroupRef.current) {
+        rearGroupRef.current.position.z = MathUtils.lerp(0, 20.0, ease);
+        rearGroupRef.current.rotation.x = MathUtils.lerp(0, 0.4, ease);
+      }
+    } else {
+      if (structuralGroupRef.current) {
+        structuralGroupRef.current.position.set(0,0,0);
+        structuralGroupRef.current.rotation.set(0,0,0);
+      }
+      if (ceilingGroupRef.current) {
+        ceilingGroupRef.current.position.set(0,0,0);
+        ceilingGroupRef.current.rotation.set(0,0,0);
+      }
+      if (rearGroupRef.current) {
+        rearGroupRef.current.position.set(0,0,0);
+        rearGroupRef.current.rotation.set(0,0,0);
       }
     }
   });
@@ -274,6 +310,7 @@ export function StationInterior() {
           <meshStandardMaterial color="#0284c7" emissive="#0369a1" emissiveIntensity={0.6} metalness={0.8} roughness={0.2} />
         </mesh>
         <Text
+          depthOffset={-1}
           position={[0.1, 0.5, 0]}
           rotation={[0, Math.PI / 2, 0]}
           fontSize={0.16}
@@ -285,6 +322,7 @@ export function StationInterior() {
 
       {/* Stamped Bulkhead Serial Decal on Left Wall */}
       <Text
+        depthOffset={-1}
         position={[-8.7, 5.2, 2.0]}
         rotation={[0, Math.PI / 2, 0]}
         fontSize={0.2}
@@ -306,6 +344,7 @@ export function StationInterior() {
           <meshStandardMaterial color="#1e293b" metalness={0.8} roughness={0.3} />
         </mesh>
         <Text
+          depthOffset={-1}
           position={[-0.15, 0.6, 0]}
           rotation={[0, -Math.PI / 2, 0]}
           fontSize={0.12}
@@ -338,6 +377,7 @@ export function StationInterior() {
 
       {/* Evacuation Signage */}
       <Text
+        depthOffset={-1}
         position={[0, 4.3, 7.7]}
         fontSize={0.25}
         color={currentTime > 52.0 ? '#ef4444' : '#38bdf8'}

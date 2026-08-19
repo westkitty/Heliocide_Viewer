@@ -13,9 +13,9 @@
 
 ## Git State
 - Summary: Repo root: /Users/andrew/heliocide_viewer | Branch: main | Status: dirty | Remote: git@github.com:westkitty/Heliocide_Viewer.git
-- Latest commit: 8114846e0718a7c25864f9d183ad2e66e5d908e9 visual-40: three-layer decompression particle VFX with atmospheric venting, ice crystals, and entrained dust
-- Tracked modified count: 4
-- Untracked count: 1
+- Latest commit: eb0695234717ffec2a264232ef7ae6c9d9533fa8 Hardening pass: deterministic physics, explicit memory allocation, lifecycle disposal, strict Vite targets, UI accessiblity
+- Tracked modified count: 21
+- Untracked count: 23
 - Staged count: 1
 
 ## Commands Detected
@@ -47,5 +47,5 @@ No secret-risk matches detected.
 5. Validate the project with the hinted build command: npm run build
 
 ## Scan Metadata
-- Timestamp: 2026-08-18T20:54:57+00:00
+- Timestamp: 2026-08-19T04:52:05+00:00
 - Scanner version: 1.1.0

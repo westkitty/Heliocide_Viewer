@@ -85,6 +85,7 @@ export function TacticalConsole() {
       {/* World-space Interactive Floating Prompt */}
       <group position={[0, 2.35, 0]}>
         <Text
+          depthOffset={-1}
           fontSize={0.13}
           color={holoColor}
           anchorX="center"
@@ -95,6 +96,7 @@ export function TacticalConsole() {
           {isAlert ? '⚠ TACTICAL ALERT — CLICK TO INSPECT' : '[E] ACCESS TACTICAL CONSOLE'}
         </Text>
         <Text
+          depthOffset={-1}
           position={[0, -0.16, 0]}
           fontSize={0.09}
           color="#94a3b8"

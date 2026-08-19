@@ -3,14 +3,14 @@
     "available": true,
     "branch": "main",
     "dirty": true,
-    "head": "8114846e0718a7c25864f9d183ad2e66e5d908e9",
-    "head_subject": "visual-40: three-layer decompression particle VFX with atmospheric venting, ice crystals, and entrained dust",
+    "head": "eb0695234717ffec2a264232ef7ae6c9d9533fa8",
+    "head_subject": "Hardening pass: deterministic physics, explicit memory allocation, lifecycle disposal, strict Vite targets, UI accessiblity",
     "is_repo": true,
     "remote_url": "git@github.com:westkitty/Heliocide_Viewer.git",
     "repo_root": "/Users/andrew/heliocide_viewer",
     "staged_count": 1,
-    "tracked_modified_count": 4,
-    "untracked_count": 1
+    "tracked_modified_count": 21,
+    "untracked_count": 23
   },
   "identity": {
     "name": "heliocide_viewer",
@@ -33,16 +33,16 @@
     "Validate the project with the hinted run/dev command: npm run dev",
     "Validate the project with the hinted build command: npm run build"
   ],
-  "scan_timestamp": "2026-08-18T20:54:57+00:00",
+  "scan_timestamp": "2026-08-19T04:52:05+00:00",
   "scanner_version": "1.1.0",
   "signature": {
     "git_dirty": {
       "dirty": true,
       "staged_count": 1,
-      "tracked_modified_count": 4,
-      "untracked_count": 1
+      "tracked_modified_count": 21,
+      "untracked_count": 23
     },
-    "git_head": "8114846e0718a7c25864f9d183ad2e66e5d908e9",
+    "git_head": "eb0695234717ffec2a264232ef7ae6c9d9533fa8",
     "project_type": "vite_app",
     "scanner_version": "1.1.0",
     "watched_files": {
@@ -52,19 +52,19 @@
         "size": 4697
       },
       "index.html": {
-        "mtime_ns": 1787079572376914621,
-        "sha256": "e3fe801ffa7cdf67d709dae07356730baa0d76e6519e42e241c8c08ae9c8b07c",
-        "size": 1088
+        "mtime_ns": 1787107414583818096,
+        "sha256": "a71d3ec6bcd81875318e42aff9d0877c31b5e6da4bbb138531321935fc6c6f30",
+        "size": 1069
       },
       "package.json": {
-        "mtime_ns": 1787080603306777497,
-        "sha256": "5a426905f7bcb4432073d3f5429e8f06c457d4d2a5a8a9d5ca6e2c79797b22f4",
-        "size": 913
+        "mtime_ns": 1787107137876203146,
+        "sha256": "cffc48655f79a72297bf8860ea8c554210070363bd3feb0b841d7e42cf135388",
+        "size": 921
       },
       "vite.config.ts": {
-        "mtime_ns": 1787079542804122462,
-        "sha256": "f6b098141fa1858be378acb4a4ed449290ac87db1943b98a70cff3b814ccd8b4",
-        "size": 253
+        "mtime_ns": 1787107423979142435,
+        "sha256": "5335621c0e0745a7fe00e49a301d4918b04411b52fc097e953a8e45360c64a0e",
+        "size": 521
       }
     }
   }

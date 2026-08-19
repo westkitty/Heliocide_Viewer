@@ -34,9 +34,8 @@ export function CameraManager() {
   const playerPos = useRef(new THREE.Vector3(0, 1.7, 2.0));
   const currentVelocity = useRef(new THREE.Vector3());
   const walkDistance = useRef(0);
-  const smoothedLookAt = useRef(new THREE.Vector3(0, 0, -100));
   useEffect(() => {
-    if (cameraMode === 'FIRST_PERSON') {
+    if (cameraMode === 'WALKTHROUGH') {
       playerPos.current.set(0, 1.7, 2.0);
       camera.position.set(0, 1.7, 2.0);
       camera.lookAt(0, 1.7, -100);
@@ -46,7 +45,7 @@ export function CameraManager() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || (e.target as HTMLElement).isContentEditable) return;
-      if (cameraMode !== 'FIRST_PERSON') return;
+      if (cameraMode !== 'WALKTHROUGH') return;
       switch (e.code) {
         case 'KeyW':
         case 'ArrowUp':
@@ -109,14 +108,13 @@ export function CameraManager() {
         // Wide-angle loss perspective during final station descent
         targetFov = THREE.MathUtils.lerp(70, 82, Math.min(1.0, (currentTime - 122.0) / 16.0));
       }
-      const nextFov = THREE.MathUtils.lerp(camera.fov, targetFov, delta * 3.0);
-      if (Math.abs(camera.fov - nextFov) > 0.01) {
-        camera.fov = nextFov;
+      if (Math.abs(camera.fov - targetFov) > 0.01) {
+        camera.fov = targetFov;
         camera.updateProjectionMatrix();
       }
     }
 
-    if (cameraMode === 'FIRST_PERSON') {
+    if (cameraMode === 'WALKTHROUGH') {
       // 1. Inertial acceleration and smooth deceleration
       const maxSpeed = 4.5;
       const accel = 12.0;
@@ -160,7 +158,11 @@ export function CameraManager() {
       const speedMagnitude = Math.sqrt(
         currentVelocity.current.x ** 2 + currentVelocity.current.z ** 2
       );
+      // Accumulate walk distance deterministically based on actual speed and delta
       walkDistance.current += speedMagnitude * delta;
+
+      // Prevent wild accumulation if delta spikes during a frame drop
+      if (delta > 0.1) walkDistance.current -= speedMagnitude * (delta - 0.1);
 
       // 2. Station Boundary Collision Clamping
       if (playerPos.current.z > 7.0) {
@@ -212,33 +214,30 @@ export function CameraManager() {
       const t = Math.min(1.0, (currentTime - 122.0) / 16.0);
       const radius = THREE.MathUtils.lerp(65, 22, Math.sqrt(t));
       const angle = currentTime * 0.18;
-      
+
       const targetCamX = Math.cos(angle) * radius;
       const targetCamY = 16 - t * 28;
       const targetCamZ = Math.sin(angle) * radius - 45;
 
-      camera.position.set(
-        THREE.MathUtils.damp(camera.position.x, targetCamX, 4.0, delta),
-        THREE.MathUtils.damp(camera.position.y, targetCamY, 4.0, delta),
-        THREE.MathUtils.damp(camera.position.z, targetCamZ, 4.0, delta)
-      );
-
+      camera.position.set(targetCamX, targetCamY, targetCamZ);
       _targetLookAt.set(0, -t * 22, -100);
-      smoothedLookAt.current.lerp(_targetLookAt, delta * 3.5);
-      camera.lookAt(smoothedLookAt.current);
+      camera.lookAt(_targetLookAt);
     }
   });
 
   return (
     <>
-      {cameraMode === 'FIRST_PERSON' && <PointerLockControls />}
-      {(cameraMode === 'EXTERIOR_INSPECTION' || cameraMode === 'ORBIT_OBSERVATORY') && (
+      {cameraMode === 'WALKTHROUGH' && <PointerLockControls />}
+      {(cameraMode === 'OBSERVATION' || cameraMode === 'FORENSIC_REPLAY') && (
         <OrbitControls
           makeDefault
           enableDamping
+          enablePan={true}
+          enableZoom={true}
           dampingFactor={0.08}
-          minDistance={15}
+          minDistance={1}
           maxDistance={400}
+          target={[0, 0, -100]} // Look out towards the star event
         />
       )}
     </>

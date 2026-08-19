@@ -47,14 +47,14 @@
     "available": true,
     "branch": "main",
     "dirty": true,
-    "head": "8114846e0718a7c25864f9d183ad2e66e5d908e9",
-    "head_subject": "visual-40: three-layer decompression particle VFX with atmospheric venting, ice crystals, and entrained dust",
+    "head": "eb0695234717ffec2a264232ef7ae6c9d9533fa8",
+    "head_subject": "Hardening pass: deterministic physics, explicit memory allocation, lifecycle disposal, strict Vite targets, UI accessiblity",
     "is_repo": true,
     "remote_url": "git@github.com:westkitty/Heliocide_Viewer.git",
     "repo_root": "/Users/andrew/heliocide_viewer",
     "staged_count": 1,
-    "tracked_modified_count": 4,
-    "untracked_count": 1
+    "tracked_modified_count": 21,
+    "untracked_count": 23
   },
   "identity": {
     "name": "heliocide_viewer",
@@ -77,7 +77,7 @@
     "Validate the project with the hinted run/dev command: npm run dev",
     "Validate the project with the hinted build command: npm run build"
   ],
-  "scan_timestamp": "2026-08-18T20:54:57+00:00",
+  "scan_timestamp": "2026-08-19T04:52:05+00:00",
   "scanner_version": "1.1.0",
   "secret_risks": []
 }

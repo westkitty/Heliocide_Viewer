@@ -84,27 +84,26 @@ const VoidFragmentShader = `
     if (uProgress <= 0.001) discard;
 
     vec3 dir = normalize(vWorldPosition);
-    float theta = atan(dir.z, dir.x);
-    float elevation = dir.y;
 
-    // Organic multi-scale boundary perturbations
-    float n1 = snoise(dir * 2.5);
-    float n2 = snoise(dir * 6.0);
-    float organicFront = n1 * 0.22 + n2 * 0.08;
+    // Organic multi-scale boundary perturbations for a massive irregular flood
+    float n1 = snoise(dir * 1.5 + uTime * 0.05);
+    float n2 = snoise(dir * 4.0);
+    float noiseVal = (n1 * 0.7 + n2 * 0.3) * 0.5 + 0.5; // normalized 0 to 1
 
-    float minTheta = 0.12 + organicFront * 0.5;
-    float currentMaxTheta = minTheta + uProgress * (2.4 + organicFront);
-    float elevationBound = 0.65 * (0.35 + uProgress * 0.65) + organicFront * 0.15;
+    // Directional gradient so it sweeps across the sky rather than appearing everywhere randomly
+    // Let's have it come from the sides/back, closing in on the star (dir.z = -1)
+    float sweep = (dir.z + 1.0) * 0.5; // 0 at the star, 1 opposite the star
 
-    // Causal extinction front evaluation
-    float inAzimuth = smoothstep(minTheta - 0.08, minTheta + 0.04, theta) * (1.0 - smoothstep(currentMaxTheta - 0.06, currentMaxTheta + 0.08, theta));
-    float inElevation = 1.0 - smoothstep(elevationBound * 0.8, elevationBound, abs(elevation));
+    // Calculate dynamic threshold
+    // When uProgress = 0, threshold < 0, everything is discarded
+    // When uProgress = 1, threshold > 1, nothing is discarded (pure black sky)
+    float threshold = (uProgress * 1.8) - (sweep * 0.8);
 
-    float voidMask = inAzimuth * inElevation;
-    if (voidMask <= 0.005) discard;
+    // Hard jagged irregular boundary for pure sky erasure
+    if (noiseVal > threshold) discard;
 
     // Pure starless black absorption of cosmos
-    gl_FragColor = vec4(0.0, 0.0, 0.0, clamp(voidMask * uProgress * 1.6, 0.0, 1.0));
+    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
   }
 `;
 
@@ -143,8 +142,8 @@ export function SiegeWallVoid() {
         fragmentShader={VoidFragmentShader}
         uniforms={uniforms}
         side={THREE.BackSide}
-        transparent
-        depthWrite={false}
+        transparent={false}
+        depthWrite={true}
       />
     </mesh>
   );

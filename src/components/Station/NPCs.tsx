@@ -697,6 +697,7 @@ function ArticulatedCrewCharacter({ member }: { member: CrewMember }) {
       {/* Holographic In-World Nameplate & Telemetry Tag */}
       <group position={[0, 2.15, 0]}>
         <Text
+          depthOffset={-1}
           fontSize={0.11}
           color="#f8fafc"
           anchorX="center"
@@ -707,6 +708,7 @@ function ArticulatedCrewCharacter({ member }: { member: CrewMember }) {
           {member.name}
         </Text>
         <Text
+          depthOffset={-1}
           position={[0, -0.12, 0]}
           fontSize={0.075}
           color={member.insigniaColor}

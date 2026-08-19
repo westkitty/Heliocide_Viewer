@@ -208,10 +208,10 @@ export function ForensicReplayControls() {
         </span>
         <div style={{ display: 'flex', gap: '6px' }}>
           <button
-            onClick={() => handleCameraChange('FIRST_PERSON')}
+            onClick={() => handleCameraChange('WALKTHROUGH')}
             style={{
               padding: '4px 8px',
-              backgroundColor: cameraMode === 'FIRST_PERSON' ? '#0284c7' : '#0f172a',
+              backgroundColor: cameraMode === 'WALKTHROUGH' ? '#0284c7' : '#0f172a',
               border: '1px solid #334155',
               borderRadius: '4px',
               color: '#f8fafc',
@@ -225,10 +225,10 @@ export function ForensicReplayControls() {
             <Eye size={12} /> Station Interior (1st Person)
           </button>
           <button
-            onClick={() => handleCameraChange('EXTERIOR_INSPECTION')}
+            onClick={() => handleCameraChange('OBSERVATION')}
             style={{
               padding: '4px 8px',
-              backgroundColor: cameraMode === 'EXTERIOR_INSPECTION' ? '#0284c7' : '#0f172a',
+              backgroundColor: cameraMode === 'OBSERVATION' ? '#0284c7' : '#0f172a',
               border: '1px solid #334155',
               borderRadius: '4px',
               color: '#f8fafc',

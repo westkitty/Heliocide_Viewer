@@ -9,7 +9,7 @@ Read this handoff and project_report.md first.
 
 ## Current Git State
 - Repo root: /Users/andrew/heliocide_viewer | Branch: main | Status: dirty | Remote: git@github.com:westkitty/Heliocide_Viewer.git
-- Latest commit: 8114846e0718a7c25864f9d183ad2e66e5d908e9 visual-40: three-layer decompression particle VFX with atmospheric venting, ice crystals, and entrained dust
+- Latest commit: eb0695234717ffec2a264232ef7ae6c9d9533fa8 Hardening pass: deterministic physics, explicit memory allocation, lifecycle disposal, strict Vite targets, UI accessiblity
 
 ## Detected Project Type
 - Type: vite_app

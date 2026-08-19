@@ -4,7 +4,7 @@
  */
 
 class SoundEngine {
-  private ctx: AudioContext | null = null;
+  public ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
   
   // Ambient nodes
@@ -25,7 +25,7 @@ class SoundEngine {
   private alarmGain: GainNode | null = null;
 
   private isInitialized = false;
-  private lastPhase: string = '';
+  public lastPhase: string = '';
 
   public init() {
     if (this.isInitialized) return;
@@ -142,17 +142,32 @@ class SoundEngine {
     this.isInitialized = false;
   }
 
-  public update(time: number, phase: string, volume: number = 0.8) {
+  public cancelFutureAutomations(now: number) {
+    if (!this.ctx) return;
+    if (this.rumbleGain) this.rumbleGain.gain.cancelScheduledValues(now);
+    if (this.rumbleFilter) this.rumbleFilter.frequency.cancelScheduledValues(now);
+    if (this.rumbleOsc) this.rumbleOsc.frequency.cancelScheduledValues(now);
+    if (this.alarmGain) this.alarmGain.gain.cancelScheduledValues(now);
+    if (this.alarmOsc) this.alarmOsc.frequency.cancelScheduledValues(now);
+    if (this.masterGain) this.masterGain.gain.cancelScheduledValues(now);
+  }
+
+  public update(time: number, phase: string, volume: number = 0.8, isPlaying: boolean = true) {
     if (!this.ctx || !this.isInitialized) return;
     const now = this.ctx.currentTime;
 
     if (this.masterGain) {
-      this.masterGain.gain.setTargetAtTime(volume, now, 0.05);
+      this.masterGain.gain.setTargetAtTime(isPlaying ? volume : 0.0001, now, 0.05);
     }
 
     // Trigger phase transition cues
     if (phase !== this.lastPhase) {
-      this.handlePhaseTransition(phase, now);
+      // Only play transition cues if we are actively playing forward
+      if (isPlaying) {
+        this.handlePhaseTransition(phase, now);
+      } else {
+        this.cancelFutureAutomations(now);
+      }
       this.lastPhase = phase;
     }
 

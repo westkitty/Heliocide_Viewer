@@ -50,6 +50,7 @@ export function HullBreach() {
           <meshStandardMaterial color="#1e293b" metalness={0.88} roughness={0.25} />
         </mesh>
         <Text
+          depthOffset={-1}
           position={[-0.15, 1.8, 0]}
           rotation={[0, -Math.PI / 2, 0]}
           fontSize={0.18}
@@ -111,6 +112,7 @@ export function HullBreach() {
 
       {/* 4. Critical Warning Holographic HUD */}
       <Text
+        depthOffset={-1}
         position={[-0.3, 2.2, 0]}
         rotation={[0, -Math.PI / 2, 0]}
         fontSize={0.24}
@@ -119,6 +121,7 @@ export function HullBreach() {
         ⚠ CRITICAL HULL INTEGRITY FAILURE
       </Text>
       <Text
+        depthOffset={-1}
         position={[-0.3, 1.8, 0]}
         rotation={[0, -Math.PI / 2, 0]}
         fontSize={0.14}

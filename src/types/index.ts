@@ -9,10 +9,10 @@ export type PhaseId =
   | 'PHASE_H_FORENSIC_REPLAY';
 
 export type CameraMode =
-  | 'FIRST_PERSON'
-  | 'EXTERIOR_INSPECTION'
-  | 'ORBIT_OBSERVATORY'
-  | 'CINEMATIC';
+  | 'OBSERVATION'
+  | 'WALKTHROUGH'
+  | 'CINEMATIC'
+  | 'FORENSIC_REPLAY';
 
 export type TacticalTab =
   | 'OVERVIEW'

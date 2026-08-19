@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useTimelineStore } from './store/timelineStore';
 import { soundSystem } from './audio/SoundSystem';
@@ -23,6 +23,7 @@ function SimulationFrameLoop() {
     const handleContextLost = (e: Event) => {
       e.preventDefault();
       console.warn('[Heliocide] WebGL context lost. Stabilizing presentation...');
+      useTimelineStore.getState().pause(); // Pause time so audio stops and desync is avoided
     };
     const handleContextRestored = () => {
       console.info('[Heliocide] WebGL context successfully restored.');
@@ -46,12 +47,29 @@ function SimulationFrameLoop() {
       steps++;
     }
 
-    const { currentTime, currentPhase, accessibility } = useTimelineStore.getState();
+    const { currentTime, currentPhase, accessibility, isPlaying } = useTimelineStore.getState();
     // Update procedural sound engine with current deterministic time & phase
-    soundSystem.update(currentTime, currentPhase, accessibility.masterVolume);
+    soundSystem.update(currentTime, currentPhase, accessibility.masterVolume, isPlaying);
   });
 
   return null;
+}
+
+
+class CanvasErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean}> {
+  constructor(props: {children: React.ReactNode}) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  render() {
+    if (this.state.hasError) {
+      return <div style={{color: 'red', padding: '20px', zIndex: 9999, position: 'relative'}}>WebGL Presentation Failure. Containment aborted.</div>;
+    }
+    return this.props.children;
+  }
 }
 
 export function App() {
@@ -74,6 +92,16 @@ export function App() {
     };
   }, []);
 
+    useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        useTimelineStore.getState().pause();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
   const handleCanvasClick = () => {
     soundSystem.init();
     soundSystem.resume();
@@ -83,6 +111,7 @@ export function App() {
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
       {/* 3D WebGL Canvas */}
+      <CanvasErrorBoundary>
       <Canvas
         gl={{
           antialias: true,
@@ -104,6 +133,7 @@ export function App() {
         <CelestialSystem />
         <HeliocidePostProcessing />
       </Canvas>
+      </CanvasErrorBoundary>
 
       {/* 2D DOM Interfaces */}
       <HUD />

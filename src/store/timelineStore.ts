@@ -165,10 +165,10 @@ function getInitialStateFromURL() {
     }
 
     const phase = getPhaseAtTime(time);
-    
+
     // validate camera mode
-    const VALID_CAMERA_MODES: CameraMode[] = ['FIRST_PERSON', 'EXTERIOR_INSPECTION', 'CINEMATIC'];
-    let cameraMode: CameraMode = time >= 122.0 ? 'CINEMATIC' : 'FIRST_PERSON';
+    const VALID_CAMERA_MODES: CameraMode[] = ['WALKTHROUGH', 'OBSERVATION', 'CINEMATIC'];
+    let cameraMode: CameraMode = time >= 122.0 ? 'CINEMATIC' : 'WALKTHROUGH';
     if (cameraParam && VALID_CAMERA_MODES.includes(cameraParam as CameraMode)) {
       cameraMode = cameraParam as CameraMode;
     }
@@ -198,13 +198,13 @@ export const useTimelineStore = create<TimelineStoreState>((set, get) => ({
   playbackRate: 1.0,
   currentPhase: initialURL.currentPhase ?? 'PHASE_A_NORMAL',
   isForensicUnlocked: (initialURL.currentTime ?? 0) >= TOTAL_EXPERIENCE_DURATION,
-  cameraMode: initialURL.cameraMode ?? 'FIRST_PERSON',
+  cameraMode: initialURL.cameraMode ?? 'WALKTHROUGH',
   tacticalModalOpen: initialURL.tacticalModalOpen ?? false,
   tacticalTab: initialURL.tacticalTab ?? 'OVERVIEW',
   audioUnlocked: false,
   activeSubtitle: null,
   accessibility: {
-    reducedMotion: false,
+    reducedMotion: typeof window !== 'undefined' ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false,
     captions: true,
     highContrast: false,
     subtitles: true,
@@ -226,12 +226,12 @@ export const useTimelineStore = create<TimelineStoreState>((set, get) => ({
         isPlaying: false,
         currentPhase: 'PHASE_H_FORENSIC_REPLAY',
         isForensicUnlocked: true,
-        cameraMode: 'EXTERIOR_INSPECTION'
+        cameraMode: 'OBSERVATION'
       });
     } else {
       // Transition camera automatically to cinematic when station loss occurs during live playthrough
       let camMode = get().cameraMode;
-      if (nextPhase === 'PHASE_G_STATION_LOSS' && camMode === 'FIRST_PERSON' && !isForensicUnlocked) {
+      if (nextPhase === 'PHASE_G_STATION_LOSS' && camMode === 'WALKTHROUGH' && !isForensicUnlocked) {
         camMode = 'CINEMATIC';
       }
 
@@ -248,15 +248,26 @@ export const useTimelineStore = create<TimelineStoreState>((set, get) => ({
     if (!Number.isFinite(time)) return;
     const clamped = Math.max(0, Math.min(TOTAL_EXPERIENCE_DURATION, time));
     const phase = getPhaseAtTime(clamped);
+
+    // Explicit sync boundary for audio cancellation
+    if (typeof window !== 'undefined') {
+      import('../audio/SoundSystem').then(({ soundSystem }) => {
+        soundSystem.cancelFutureAutomations(soundSystem.ctx?.currentTime || 0);
+        // Force lastPhase to align to prevent stingers firing just because we arrived here
+        soundSystem.lastPhase = phase;
+      });
+    }
+
     set({
       currentTime: clamped,
-      currentPhase: phase
+      currentPhase: phase,
+      isForensicUnlocked: get().isForensicUnlocked || clamped >= TOTAL_EXPERIENCE_DURATION
     });
   },
 
-  play: () => set({ isPlaying: true }),
+  play: () => set((state) => ({ isPlaying: state.currentTime >= TOTAL_EXPERIENCE_DURATION ? false : true })),
   pause: () => set({ isPlaying: false }),
-  togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
+  togglePlay: () => set((state) => ({ isPlaying: (state.currentTime >= TOTAL_EXPERIENCE_DURATION) ? false : !state.isPlaying })),
   setPlaybackRate: (rate: number) => {
     if (Number.isFinite(rate) && rate > 0 && rate <= 10) {
       set({ playbackRate: rate });
@@ -277,14 +288,20 @@ export const useTimelineStore = create<TimelineStoreState>((set, get) => ({
   unlockAudio: () => set({ audioUnlocked: true }),
   updateAccessibility: (settings) => set((state) => ({ accessibility: { ...state.accessibility, ...settings } })),
   setSubtitle: (text: string | null) => set({ activeSubtitle: text }),
-  
+
   restart: () => {
+    if (typeof window !== 'undefined') {
+      import('../audio/SoundSystem').then(({ soundSystem }) => {
+        soundSystem.cancelFutureAutomations(soundSystem.ctx?.currentTime || 0);
+        soundSystem.lastPhase = 'PHASE_A_NORMAL';
+      });
+    }
     set({
       currentTime: 0,
       isPlaying: true,
       playbackRate: 1.0,
       currentPhase: 'PHASE_A_NORMAL',
-      cameraMode: 'FIRST_PERSON',
+      cameraMode: 'OBSERVATION',
       tacticalModalOpen: false,
       tacticalTab: 'OVERVIEW',
       activeSubtitle: null
