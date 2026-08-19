@@ -161,12 +161,14 @@ function getInitialStateFromURL() {
     const cameraMode = (cameraParam as CameraMode) || (time >= 122.0 ? 'CINEMATIC' : 'FIRST_PERSON');
     const tacticalModalOpen = modalParam === 'true';
     const isPlaying = pausedParam === 'true' ? false : true;
+    const tacticalTab: TacticalTab = (phase === 'PHASE_C_SHARD_GOD_AUTHORITY' || (time >= 32.0 && time < 52.0)) ? 'SHARD_GOD_DOSSIER' : 'OVERVIEW';
 
     return {
       currentTime: time,
       currentPhase: phase,
       cameraMode,
       tacticalModalOpen,
+      tacticalTab,
       isPlaying
     };
   } catch {
@@ -184,7 +186,7 @@ export const useTimelineStore = create<TimelineStoreState>((set, get) => ({
   isForensicUnlocked: (initialURL.currentTime ?? 0) >= TOTAL_EXPERIENCE_DURATION,
   cameraMode: initialURL.cameraMode ?? 'FIRST_PERSON',
   tacticalModalOpen: initialURL.tacticalModalOpen ?? false,
-  tacticalTab: 'OVERVIEW',
+  tacticalTab: initialURL.tacticalTab ?? 'OVERVIEW',
   audioUnlocked: false,
   activeSubtitle: null,
   accessibility: {
@@ -242,7 +244,17 @@ export const useTimelineStore = create<TimelineStoreState>((set, get) => ({
   togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
   setPlaybackRate: (rate: number) => set({ playbackRate: rate }),
   setCameraMode: (mode: CameraMode) => set({ cameraMode: mode }),
-  setTacticalModalOpen: (open: boolean, tab: TacticalTab = 'OVERVIEW') => set({ tacticalModalOpen: open, tacticalTab: tab }),
+  setTacticalModalOpen: (open: boolean, tab?: TacticalTab) => {
+    const state = get();
+    const defaultTab: TacticalTab =
+      state.currentPhase === 'PHASE_C_SHARD_GOD_AUTHORITY' || (state.currentTime >= 32.0 && state.currentTime < 52.0)
+        ? 'SHARD_GOD_DOSSIER'
+        : 'OVERVIEW';
+    set({
+      tacticalModalOpen: open,
+      tacticalTab: tab ?? (open ? defaultTab : state.tacticalTab)
+    });
+  },
   unlockAudio: () => set({ audioUnlocked: true }),
   updateAccessibility: (settings) => set((state) => ({ accessibility: { ...state.accessibility, ...settings } })),
   setSubtitle: (text: string | null) => set({ activeSubtitle: text }),

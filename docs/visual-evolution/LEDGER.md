@@ -51,11 +51,11 @@
 | **38** | Practical Lighting System | Pending | ALL | ACCEPTED | 32 -> 40 | Emissive linear fixtures, console task lights, and dynamic emergency strobes |
 | **39** | Real Structural Breach | Pending | E_BREACH | ACCEPTED | 25 -> 40 | Catastrophic hull breach with jagged titanium shards and arcing electrical discharge |
 | **40** | Decompression VFX | Pending | E_BREACH | ACCEPTED | 33 -> 40 | Three-layer atmospheric decompression particles with directional flow and Venturi acceleration |
-| **41** | Debris Mass / Material / Collision Pass | Pending | E_BREACH | Queued | - | Varied debris pieces with physical mass, angular tumbling, and collision response |
-| **42** | Replace Primitive NPC Silhouettes | Pending | A_NORMAL / C_SHARD_GOD | Queued | - | Detailed Administration eva suit geometry, articulated joints, and visors |
-| **43** | NPC Material / Contact / Silhouette Pass | Pending | A_NORMAL | Queued | - | Specular visor reflections, fabric weave roughness, and contact ambient occlusion |
-| **44** | NPC Locomotion / Evacuation Animation | Pending | E_BREACH | Queued | - | Urgent kinematic evacuation walk cycles with realistic step planting |
-| **45** | NPC Zero-G / Inertial Reaction | Pending | E_BREACH | Queued | - | Physical zero-g flailing, handrail grabs, and drifting inertia upon gravity loss |
+| **41** | Debris Mass / Material / Collision Pass | Pending | E_BREACH | ACCEPTED | 26 -> 40 | 6 distinct debris classes, PBR materials, mass-dependent rotational kinetics, and breach drift |
+| **42** | Replace Primitive NPC Silhouettes | Pending | A_NORMAL | ACCEPTED | 23 -> 40 | Detailed multi-segment articulated humanoid rigs in Administration EVA pressure suits |
+| **43** | NPC Material / Contact / Silhouette Pass | Pending | A_NORMAL | ACCEPTED | 25 -> 40 | Specular gold/cyan/emerald visors, chest telemetry matrices, and life-support backpacks |
+| **44** | NPC Locomotion / Evacuation Animation | Pending | D_COLLAPSE | ACCEPTED | 28 -> 40 | Kinematic walk/run cycles, contextual typing and observation stances, and alert gestures |
+| **45** | NPC Zero-G / Inertial Reaction | Pending | E_BREACH | ACCEPTED | 29 -> 40 | Realistic Zero-G Neutral Body Posture (NBP), limb drift, and magnetic boot disengagement |
 | **46** | Shard God Dossier Fidelity Pass | Pending | C_SHARD_GOD | Queued | - | High-fidelity Administration intelligence modal framing primary canonical artwork |
 | **47** | Tactical Console Visual Redesign | Pending | A_NORMAL | Queued | - | Volumetric 3D holographic projection, depth-projected sector map, and telemetry rings |
 | **48** | HUD + Forensic Replay Polish | Pending | H_REPLAY | Queued | - | Military-grade forensic interface, high-contrast typography, and scrubber polish |

@@ -9,7 +9,7 @@ Read this handoff and project_report.md first.
 
 ## Current Git State
 - Repo root: /Users/andrew/heliocide_viewer | Branch: main | Status: dirty | Remote: git@github.com:westkitty/Heliocide_Viewer.git
-- Latest commit: 17c72abf86a115f8ec5140ef8b9b3206f1c3fb6e visual-39: catastrophic hull breach with jagged titanium shards and arcing electrical discharge
+- Latest commit: 8114846e0718a7c25864f9d183ad2e66e5d908e9 visual-40: three-layer decompression particle VFX with atmospheric venting, ice crystals, and entrained dust
 
 ## Detected Project Type
 - Type: vite_app

@@ -1,0 +1,18 @@
+{
+  "iteration": "41",
+  "name": "Debris Mass / Material / Collision Pass",
+  "checkpoint": "E_BREACH",
+  "time": 90.0,
+  "scores": {
+    "realism": {"before": 3, "after": 5},
+    "materialSurface": {"before": 2, "after": 5},
+    "lightingFidelity": {"before": 5, "after": 5},
+    "scaleMass": {"before": 2, "after": 5},
+    "compositionReadability": {"before": 3, "after": 5},
+    "canonFidelity": {"before": 5, "after": 5},
+    "visualRichness": {"before": 3, "after": 5},
+    "technicalPolish": {"before": 3, "after": 5}
+  },
+  "totalScore": {"before": 26, "after": 40},
+  "verdict": "ACCEPTED"
+}
