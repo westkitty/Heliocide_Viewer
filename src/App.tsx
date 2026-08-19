@@ -58,6 +58,7 @@ export function App() {
   // Global key bindings
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || (e.target as HTMLElement).isContentEditable) return;
       if (e.code === 'KeyE') {
         const isOpen = useTimelineStore.getState().tacticalModalOpen;
         useTimelineStore.getState().setTacticalModalOpen(!isOpen);
@@ -67,7 +68,10 @@ export function App() {
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      soundSystem.dispose();
+    };
   }, []);
 
   const handleCanvasClick = () => {

@@ -3,12 +3,23 @@ import { TacticalTab } from '../../types';
 import { soundSystem } from '../../audio/SoundSystem';
 import { X, ShieldAlert, Radio, Globe, Terminal } from 'lucide-react';
 
+function TimeDisplay() {
+  const time = useTimelineStore((s) => s.currentTime);
+  return <>{time.toFixed(1)}</>;
+}
+
+function HalVenStateDisplay() {
+  const time = useTimelineStore((s) => s.currentTime);
+  const color = time > 52.0 ? '#ef4444' : '#10b981';
+  const text = time > 78.0 ? 'STATE: COLLAPSED SINGULARITY' : time > 52.0 ? 'STATE: GRAVITATIONAL IMPLOSION' : 'STATE: STABLE FUSION';
+  return <div style={{ fontSize: '0.8rem', color, marginTop: '4px' }}>{text}</div>;
+}
+
 export function TacticalDossierModal() {
   const tacticalModalOpen = useTimelineStore((s) => s.tacticalModalOpen);
   const tacticalTab = useTimelineStore((s) => s.tacticalTab);
   const setTacticalModalOpen = useTimelineStore((s) => s.setTacticalModalOpen);
-  const currentTime = useTimelineStore((s) => s.currentTime);
-  const currentPhase = useTimelineStore((s) => s.currentPhase);
+    const currentPhase = useTimelineStore((s) => s.currentPhase);
 
   if (!tacticalModalOpen) return null;
 
@@ -75,7 +86,7 @@ export function TacticalDossierModal() {
                 ADMINISTRATION TACTICAL TELEMETRY // STATION HV-88
               </h2>
               <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                HAL'VEN CLUSTER OBSERVATION SECTOR — TIME INDEX: {currentTime.toFixed(1)}s
+                HAL'VEN CLUSTER OBSERVATION SECTOR — TIME INDEX: <TimeDisplay />
               </span>
             </div>
           </div>
@@ -252,9 +263,7 @@ export function TacticalDossierModal() {
                 <div style={{ padding: '16px', backgroundColor: '#0f172a', borderRadius: '6px', border: '1px solid #1e293b' }}>
                   <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>PRIMARY STELLAR BODY</span>
                   <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#f8fafc', marginTop: '4px' }}>Hal'Ven Prime</div>
-                  <div style={{ fontSize: '0.8rem', color: currentTime > 52.0 ? '#ef4444' : '#10b981', marginTop: '4px' }}>
-                    {currentTime > 78.0 ? 'STATE: COLLAPSED SINGULARITY' : currentTime > 52.0 ? 'STATE: GRAVITATIONAL IMPLOSION' : 'STATE: STABLE FUSION'}
-                  </div>
+                  <HalVenStateDisplay />
                 </div>
 
                 <div style={{ padding: '16px', backgroundColor: '#0f172a', borderRadius: '6px', border: '1px solid #1e293b' }}>

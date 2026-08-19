@@ -125,6 +125,23 @@ class SoundEngine {
     }
   }
 
+  public dispose() {
+    if (!this.ctx) return;
+    try {
+      if (this.rumbleOsc) { this.rumbleOsc.stop(); this.rumbleOsc.disconnect(); }
+      if (this.rumbleFilter) this.rumbleFilter.disconnect();
+      if (this.rumbleGain) this.rumbleGain.disconnect();
+      if (this.alarmOsc) { this.alarmOsc.stop(); this.alarmOsc.disconnect(); }
+      if (this.alarmGain) this.alarmGain.disconnect();
+      if (this.masterGain) this.masterGain.disconnect();
+      this.ctx.close();
+    } catch (e) {
+      console.warn('AudioContext dispose error:', e);
+    }
+    this.ctx = null;
+    this.isInitialized = false;
+  }
+
   public update(time: number, phase: string, volume: number = 0.8) {
     if (!this.ctx || !this.isInitialized) return;
     const now = this.ctx.currentTime;

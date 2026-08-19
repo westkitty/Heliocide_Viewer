@@ -116,7 +116,7 @@ export function SiegeWallVoid() {
     uTime: { value: 0 }
   }), []);
 
-  useFrame((_, delta) => {
+  useFrame(() => {
     if (!materialRef.current) return;
     const currentTime = useTimelineStore.getState().currentTime;
 
@@ -131,7 +131,7 @@ export function SiegeWallVoid() {
     }
 
     materialRef.current.uniforms.uProgress.value = progress;
-    materialRef.current.uniforms.uTime.value += delta;
+    materialRef.current.uniforms.uTime.value = currentTime;
   });
 
   return (

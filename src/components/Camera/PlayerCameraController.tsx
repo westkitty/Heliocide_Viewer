@@ -4,10 +4,24 @@ import { useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls, PointerLockControls } from '@react-three/drei';
 import { useTimelineStore } from '../../store/timelineStore';
 
+// Preallocate reusable scratch vectors for the frame loop to prevent GC churn
+const _dir = new THREE.Vector3();
+const _frontVector = new THREE.Vector3();
+const _sideVector = new THREE.Vector3();
+const _euler = new THREE.Euler();
+const _targetLookAt = new THREE.Vector3();
+
+// Simple pseudo-random hash for deterministic shake
+function hash11(p: number) {
+  p = (p * 0.1031) % 1;
+  p *= p + 33.33;
+  p *= p + p;
+  return (p % 1);
+}
+
 export function CameraManager() {
   const cameraMode = useTimelineStore((s) => s.cameraMode);
-  const currentTime = useTimelineStore((s) => s.currentTime);
-  const accessibility = useTimelineStore((s) => s.accessibility);
+    const accessibility = useTimelineStore((s) => s.accessibility);
   const { camera } = useThree();
 
   const moveKeys = useRef({
@@ -31,6 +45,7 @@ export function CameraManager() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || (e.target as HTMLElement).isContentEditable) return;
       if (cameraMode !== 'FIRST_PERSON') return;
       switch (e.code) {
         case 'KeyW':
@@ -82,6 +97,7 @@ export function CameraManager() {
   }, [cameraMode]);
 
   useFrame((_, delta) => {
+    const currentTime = useTimelineStore.getState().currentTime;
     // Dynamic Relativistic FOV Tuning
     if (camera instanceof THREE.PerspectiveCamera) {
       let targetFov = 70;
@@ -93,8 +109,11 @@ export function CameraManager() {
         // Wide-angle loss perspective during final station descent
         targetFov = THREE.MathUtils.lerp(70, 82, Math.min(1.0, (currentTime - 122.0) / 16.0));
       }
-      camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, delta * 3.0);
-      camera.updateProjectionMatrix();
+      const nextFov = THREE.MathUtils.lerp(camera.fov, targetFov, delta * 3.0);
+      if (Math.abs(camera.fov - nextFov) > 0.01) {
+        camera.fov = nextFov;
+        camera.updateProjectionMatrix();
+      }
     }
 
     if (cameraMode === 'FIRST_PERSON') {
@@ -103,34 +122,34 @@ export function CameraManager() {
       const accel = 12.0;
       const friction = 8.0;
 
-      const dir = new THREE.Vector3();
-      const frontVector = new THREE.Vector3(
+      _frontVector.set(
         0,
         0,
         (moveKeys.current.backward ? 1 : 0) - (moveKeys.current.forward ? 1 : 0)
       );
-      const sideVector = new THREE.Vector3(
+      _sideVector.set(
         (moveKeys.current.right ? 1 : 0) - (moveKeys.current.left ? 1 : 0),
         0,
         0
       );
 
-      dir.subVectors(frontVector, sideVector).normalize();
-      dir.applyEuler(new THREE.Euler(0, camera.rotation.y, 0));
+      _dir.subVectors(_frontVector, _sideVector).normalize();
+      _euler.set(0, camera.rotation.y, 0);
+      _dir.applyEuler(_euler);
 
-      const targetVelX = dir.x * maxSpeed;
-      const targetVelZ = dir.z * maxSpeed;
+      const targetVelX = _dir.x * maxSpeed;
+      const targetVelZ = _dir.z * maxSpeed;
 
       currentVelocity.current.x = THREE.MathUtils.damp(
         currentVelocity.current.x,
         targetVelX,
-        dir.lengthSq() > 0 ? accel : friction,
+        _dir.lengthSq() > 0 ? accel : friction,
         delta
       );
       currentVelocity.current.z = THREE.MathUtils.damp(
         currentVelocity.current.z,
         targetVelZ,
-        dir.lengthSq() > 0 ? accel : friction,
+        _dir.lengthSq() > 0 ? accel : friction,
         delta
       );
 
@@ -170,12 +189,12 @@ export function CameraManager() {
         // 4. Catastrophic Multi-Harmonic Earthquake Camera Shake
         if (currentTime >= 52.0 && currentTime < 78.0) {
           const intensity = ((currentTime - 52.0) / 26.0) * 0.09;
-          swayY += (Math.sin(currentTime * 45.0) * 0.5 + (Math.random() - 0.5) * 0.5) * intensity;
-          swayX += (Math.cos(currentTime * 38.0) * 0.5 + (Math.random() - 0.5) * 0.5) * intensity;
+          swayY += (Math.sin(currentTime * 45.0) * 0.5 + (hash11(currentTime * 100.0) - 0.5) * 0.5) * intensity;
+          swayX += (Math.cos(currentTime * 38.0) * 0.5 + (hash11(currentTime * 100.0) - 0.5) * 0.5) * intensity;
         } else if (currentTime >= 78.0 && currentTime < 122.0) {
           const intensity = 0.14;
-          swayY += (Math.sin(currentTime * 60.0) * 0.4 + (Math.random() - 0.5) * 0.6) * intensity;
-          swayX += (Math.cos(currentTime * 52.0) * 0.4 + (Math.random() - 0.5) * 0.6) * intensity;
+          swayY += (Math.sin(currentTime * 60.0) * 0.4 + (hash11(currentTime * 100.0) - 0.5) * 0.6) * intensity;
+          swayX += (Math.cos(currentTime * 52.0) * 0.4 + (hash11(currentTime * 100.0) - 0.5) * 0.6) * intensity;
         }
       }
 
@@ -204,8 +223,8 @@ export function CameraManager() {
         THREE.MathUtils.damp(camera.position.z, targetCamZ, 4.0, delta)
       );
 
-      const targetLookAt = new THREE.Vector3(0, -t * 22, -100);
-      smoothedLookAt.current.lerp(targetLookAt, delta * 3.5);
+      _targetLookAt.set(0, -t * 22, -100);
+      smoothedLookAt.current.lerp(_targetLookAt, delta * 3.5);
       camera.lookAt(smoothedLookAt.current);
     }
   });

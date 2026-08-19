@@ -156,9 +156,23 @@ function getInitialStateFromURL() {
     const modalParam = params.get('modal');
     const pausedParam = params.get('paused');
 
-    const time = timeParam !== null ? parseFloat(timeParam) : 0;
+    let time = 0;
+    if (timeParam !== null) {
+      const parsed = parseFloat(timeParam);
+      if (Number.isFinite(parsed)) {
+        time = Math.max(0, Math.min(TOTAL_EXPERIENCE_DURATION, parsed));
+      }
+    }
+
     const phase = getPhaseAtTime(time);
-    const cameraMode = (cameraParam as CameraMode) || (time >= 122.0 ? 'CINEMATIC' : 'FIRST_PERSON');
+    
+    // validate camera mode
+    const VALID_CAMERA_MODES: CameraMode[] = ['FIRST_PERSON', 'EXTERIOR_INSPECTION', 'CINEMATIC'];
+    let cameraMode: CameraMode = time >= 122.0 ? 'CINEMATIC' : 'FIRST_PERSON';
+    if (cameraParam && VALID_CAMERA_MODES.includes(cameraParam as CameraMode)) {
+      cameraMode = cameraParam as CameraMode;
+    }
+
     const tacticalModalOpen = modalParam === 'true';
     const isPlaying = pausedParam === 'true' ? false : true;
     const tacticalTab: TacticalTab = (phase === 'PHASE_C_SHARD_GOD_AUTHORITY' || (time >= 32.0 && time < 52.0)) ? 'SHARD_GOD_DOSSIER' : 'OVERVIEW';
@@ -231,6 +245,7 @@ export const useTimelineStore = create<TimelineStoreState>((set, get) => ({
   },
 
   seek: (time: number) => {
+    if (!Number.isFinite(time)) return;
     const clamped = Math.max(0, Math.min(TOTAL_EXPERIENCE_DURATION, time));
     const phase = getPhaseAtTime(clamped);
     set({
@@ -242,7 +257,11 @@ export const useTimelineStore = create<TimelineStoreState>((set, get) => ({
   play: () => set({ isPlaying: true }),
   pause: () => set({ isPlaying: false }),
   togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
-  setPlaybackRate: (rate: number) => set({ playbackRate: rate }),
+  setPlaybackRate: (rate: number) => {
+    if (Number.isFinite(rate) && rate > 0 && rate <= 10) {
+      set({ playbackRate: rate });
+    }
+  },
   setCameraMode: (mode: CameraMode) => set({ cameraMode: mode }),
   setTacticalModalOpen: (open: boolean, tab?: TacticalTab) => {
     const state = get();

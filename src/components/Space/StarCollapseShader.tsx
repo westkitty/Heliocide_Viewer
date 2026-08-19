@@ -253,6 +253,10 @@ const AccretionFragmentShader = `
   }
 `;
 
+const _normalColor = new THREE.Color('#fff4e6');
+const _flashColor = new THREE.Color('#bae6fd');
+const _collapsedColor = new THREE.Color('#0284c7');
+
 export function StarCollapseShader() {
   const meshRef = useRef<THREE.Mesh>(null);
   const diskRef = useRef<THREE.Mesh>(null);
@@ -270,10 +274,10 @@ export function StarCollapseShader() {
     uCollapseProgress: { value: 0 }
   }), []);
 
-  useFrame((_, delta) => {
+  useFrame(() => {
     if (!meshRef.current) return;
-    starUniforms.uTime.value += delta;
-    diskUniforms.uTime.value += delta;
+    starUniforms.uTime.value = useTimelineStore.getState().currentTime;
+    diskUniforms.uTime.value = useTimelineStore.getState().currentTime;
 
     const currentTime = useTimelineStore.getState().currentTime;
     starUniforms.uCurrentTime.value = currentTime;
@@ -295,28 +299,28 @@ export function StarCollapseShader() {
     const pulse = progress > 0 && progress < 1 ? Math.sin(currentTime * 18.0) * 0.03 * (1 - progress) : 0;
     meshRef.current.scale.setScalar(Math.max(0.2, baseScale + pulse));
 
-    meshRef.current.rotation.y += delta * (0.05 + progress * 0.5);
+    
 
+    meshRef.current.rotation.y = currentTime * (0.05 + progress * 0.5);
     if (diskRef.current) {
       diskRef.current.scale.setScalar((baseScale + pulse) * 1.6);
-      diskRef.current.rotation.z -= delta * 0.03;
+      diskRef.current.rotation.z = -currentTime * 0.03;
+      
     }
 
     if (lightRef.current) {
-      const normalColor = new THREE.Color('#fff4e6');
-      const flashColor = new THREE.Color('#bae6fd');
-      const collapsedColor = new THREE.Color('#0284c7');
+      
       
       if (progress <= 0) {
-        lightRef.current.color.copy(normalColor);
+        lightRef.current.color.copy(_normalColor);
         lightRef.current.intensity = 15000;
       } else if (progress < 0.35) {
         const t = progress / 0.35;
-        lightRef.current.color.lerpColors(normalColor, flashColor, t);
+        lightRef.current.color.lerpColors(_normalColor, _flashColor, t);
         lightRef.current.intensity = THREE.MathUtils.lerp(15000, 35000, t);
       } else {
         const t = (progress - 0.35) / 0.65;
-        lightRef.current.color.lerpColors(flashColor, collapsedColor, t);
+        lightRef.current.color.lerpColors(_flashColor, _collapsedColor, t);
         lightRef.current.intensity = THREE.MathUtils.lerp(35000, 3200, t);
       }
     }

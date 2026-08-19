@@ -1,6 +1,7 @@
 import { useTimelineStore } from '../../store/timelineStore';
 import { soundSystem } from '../../audio/SoundSystem';
 import { X, Sliders } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 
 interface Props {
   onClose: () => void;
@@ -9,6 +10,21 @@ interface Props {
 export function AccessibilitySettingsModal({ onClose }: Props) {
   const accessibility = useTimelineStore((s) => s.accessibility);
   const updateAccessibility = useTimelineStore((s) => s.updateAccessibility);
+  const focusRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    // initial focus
+    if (focusRef.current) focusRef.current.focus();
+
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKey, { capture: true });
+    return () => window.removeEventListener('keydown', handleKey, { capture: true });
+  }, [onClose]);
 
   return (
     <div
@@ -61,6 +77,8 @@ export function AccessibilitySettingsModal({ onClose }: Props) {
             </h3>
           </div>
           <button
+            ref={focusRef}
+            aria-label="Close Settings"
             onClick={() => { soundSystem.playUIClick(); onClose(); }}
             style={{
               background: 'transparent',

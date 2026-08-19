@@ -1,4 +1,4 @@
-import { useRef, useEffect, useMemo } from 'react';
+import { useRef, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
@@ -230,7 +230,7 @@ function getCrewWaypoint(id: string, time: number): WaypointState {
  * Individual Articulated Crew Character Component
  */
 function ArticulatedCrewCharacter({ member }: { member: CrewMember }) {
-  const currentTime = useTimelineStore((s) => s.currentTime);
+  const isCatastrophe = useTimelineStore((s) => s.currentTime >= 52.0);
 
   const rootRef = useRef<THREE.Group>(null);
   const spineRef = useRef<THREE.Group>(null);
@@ -301,7 +301,7 @@ function ArticulatedCrewCharacter({ member }: { member: CrewMember }) {
 
   // Fast procedural animation loop
   useFrame((state) => {
-    const wp = getCrewWaypoint(member.id, currentTime);
+    const wp = getCrewWaypoint(member.id, useTimelineStore.getState().currentTime);
     const time = state.clock.getElapsedTime();
 
     if (rootRef.current) {
@@ -442,7 +442,7 @@ function ArticulatedCrewCharacter({ member }: { member: CrewMember }) {
     }
   });
 
-  const wp = getCrewWaypoint(member.id, currentTime);
+  const wp = getCrewWaypoint(member.id, useTimelineStore.getState().currentTime);
 
   return (
     <group ref={rootRef} position={wp.pos} rotation={[0, wp.rotY, 0]}>
@@ -508,7 +508,7 @@ function ArticulatedCrewCharacter({ member }: { member: CrewMember }) {
             {/* Emergency Status Beacon on Backpack */}
             <mesh position={[0, 0.22, 0]}>
               <sphereGeometry args={[0.025, 8, 8]} />
-              <meshBasicMaterial color={currentTime > 52.0 ? '#ef4444' : member.insigniaColor} />
+              <meshBasicMaterial color={isCatastrophe ? '#ef4444' : member.insigniaColor} />
             </mesh>
           </group>
 
@@ -655,7 +655,7 @@ function ArticulatedCrewCharacter({ member }: { member: CrewMember }) {
             {/* Boot Sole Magnetic Lock LED */}
             <mesh position={[0, -0.42, 0.04]}>
               <planeGeometry args={[0.08, 0.16]} />
-              <meshBasicMaterial color={currentTime > 52.0 ? '#ef4444' : '#10b981'} />
+              <meshBasicMaterial color={isCatastrophe ? '#ef4444' : '#10b981'} />
             </mesh>
           </group>
         </group>
@@ -688,7 +688,7 @@ function ArticulatedCrewCharacter({ member }: { member: CrewMember }) {
             {/* Boot Sole Magnetic Lock LED */}
             <mesh position={[0, -0.42, 0.04]}>
               <planeGeometry args={[0.08, 0.16]} />
-              <meshBasicMaterial color={currentTime > 52.0 ? '#ef4444' : '#10b981'} />
+              <meshBasicMaterial color={isCatastrophe ? '#ef4444' : '#10b981'} />
             </mesh>
           </group>
         </group>
@@ -723,32 +723,38 @@ function ArticulatedCrewCharacter({ member }: { member: CrewMember }) {
 }
 
 export function NPCs() {
-  const currentTime = useTimelineStore((s) => s.currentTime);
-  const currentPhase = useTimelineStore((s) => s.currentPhase);
-  const setSubtitle = useTimelineStore((s) => s.setSubtitle);
+    const setSubtitle = useTimelineStore((s) => s.setSubtitle);
 
-  // Synchronize narrative subtitle state with current timeline phase
-  useEffect(() => {
-    const v = getCrewWaypoint('vaelen', currentTime);
-    const c = getCrewWaypoint('corin', currentTime);
-    const s = getCrewWaypoint('selene', currentTime);
+  // Synchronize narrative subtitle state without high-frequency React churn
+  useFrame(() => {
+    const time = useTimelineStore.getState().currentTime;
+    const v = getCrewWaypoint('vaelen', time);
+    const c = getCrewWaypoint('corin', time);
+    const s = getCrewWaypoint('selene', time);
+    
+    const phase = useTimelineStore.getState().currentPhase;
+    let nextSubtitle = null;
 
-    if (currentPhase === 'PHASE_A_NORMAL') {
-      setSubtitle('Observation Station HV-88 — Hal\'Ven Cluster — Nominal Operations');
-    } else if (currentPhase === 'PHASE_B_AUREAL_ALERT') {
-      setSubtitle(`[Officer Selene]: "${s.dialogue}"`);
-    } else if (currentPhase === 'PHASE_C_SHARD_GOD_AUTHORITY') {
-      setSubtitle(`[Commander Vaelen]: "${v.dialogue}"`);
-    } else if (currentPhase === 'PHASE_D_HELIOCIDE') {
-      setSubtitle(`[Specialist Corin]: "${c.dialogue}"`);
-    } else if (currentPhase === 'PHASE_E_CASCADE') {
-      setSubtitle(`[Commander Vaelen]: "${v.dialogue}"`);
-    } else if (currentPhase === 'PHASE_F_SIEGE_WALL') {
-      setSubtitle(`[Officer Selene]: "${s.dialogue}"`);
-    } else if (currentPhase === 'PHASE_G_STATION_LOSS') {
-      setSubtitle('SYSTEM TELEMETRY TERMINATED — CONTAINMENT ACHIEVED');
+    if (phase === 'PHASE_A_NORMAL') {
+      nextSubtitle = 'Observation Station HV-88 — Hal\'Ven Cluster — Nominal Operations';
+    } else if (phase === 'PHASE_B_AUREAL_ALERT') {
+      nextSubtitle = `[Officer Selene]: "${s.dialogue}"`;
+    } else if (phase === 'PHASE_C_SHARD_GOD_AUTHORITY') {
+      nextSubtitle = `[Commander Vaelen]: "${v.dialogue}"`;
+    } else if (phase === 'PHASE_D_HELIOCIDE') {
+      nextSubtitle = `[Specialist Corin]: "${c.dialogue}"`;
+    } else if (phase === 'PHASE_E_CASCADE') {
+      nextSubtitle = `[Commander Vaelen]: "${v.dialogue}"`;
+    } else if (phase === 'PHASE_F_SIEGE_WALL') {
+      nextSubtitle = `[Officer Selene]: "${s.dialogue}"`;
+    } else if (phase === 'PHASE_G_STATION_LOSS') {
+      nextSubtitle = 'SYSTEM TELEMETRY TERMINATED — CONTAINMENT ACHIEVED';
     }
-  }, [currentPhase, currentTime, setSubtitle]);
+    
+    if (useTimelineStore.getState().activeSubtitle !== nextSubtitle) {
+      setSubtitle(nextSubtitle);
+    }
+  });
 
   return (
     <group name="station-npcs">

@@ -3,6 +3,15 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useTimelineStore } from '../../store/timelineStore';
 
+// Simple deterministic PRNG
+function seedRandom(s: number) {
+  return function() {
+    s = Math.sin(s) * 10000;
+    return s - Math.floor(s);
+  };
+}
+
+
 const ShockRingVertexShader = `
   varying vec2 vUv;
   varying vec3 vPosition;
@@ -67,10 +76,11 @@ export function CollapseShockwave() {
 
     for (let i = 0; i < TOTAL_EJECTA; i++) {
       // Random unit sphere direction with equatorial bias
-      const theta = Math.random() * Math.PI * 2;
-      const phi = (Math.random() - 0.5) * Math.PI * 0.7; // Equatorial concentration
+      const prng = seedRandom(i * 1337);
+      const theta = prng() * Math.PI * 2;
+      const phi = (prng() - 0.5) * Math.PI * 0.7; // Equatorial concentration
 
-      const speed = 45 + Math.random() * 120;
+      const speed = 45 + prng() * 120;
       const dx = Math.cos(phi) * Math.cos(theta);
       const dy = Math.sin(phi);
       const dz = Math.cos(phi) * Math.sin(theta);
@@ -84,7 +94,7 @@ export function CollapseShockwave() {
       pos[i * 3 + 2] = 0;
 
       // Incandescent white to ionized blue
-      const blueShift = Math.random();
+      const blueShift = prng();
       col[i * 3] = THREE.MathUtils.lerp(0.9, 0.2, blueShift);
       col[i * 3 + 1] = THREE.MathUtils.lerp(0.95, 0.7, blueShift);
       col[i * 3 + 2] = 1.0;

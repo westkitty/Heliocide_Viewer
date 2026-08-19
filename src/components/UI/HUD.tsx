@@ -1,10 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from "react";
 import { useTimelineStore, computeSubsystems, PHASE_TIMELINE } from '../../store/timelineStore';
 import { soundSystem } from '../../audio/SoundSystem';
-import { Volume2, Settings, ShieldAlert } from 'lucide-react';
+import { Volume2, Settings, ShieldAlert, Crosshair, MousePointer2 } from "lucide-react";
 import { AccessibilitySettingsModal } from './AccessibilitySettings';
 
 export function HUD() {
+  const [isLocked, setIsLocked] = useState(false);
+  useEffect(() => {
+    const handleLockChange = () => setIsLocked(!!document.pointerLockElement);
+    document.addEventListener('pointerlockchange', handleLockChange);
+    return () => document.removeEventListener('pointerlockchange', handleLockChange);
+  }, []);
   const currentTime = useTimelineStore((s) => s.currentTime);
   const currentPhase = useTimelineStore((s) => s.currentPhase);
   const audioUnlocked = useTimelineStore((s) => s.audioUnlocked);
@@ -161,6 +167,7 @@ export function HUD() {
                 cursor: 'pointer'
               }}
               title="Settings & Accessibility"
+              aria-label="Settings"
             >
               <Settings size={14} />
             </button>
@@ -263,7 +270,7 @@ export function HUD() {
         </div>
       )}
 
-      {/* Bottom Left Control Hints */}
+            {/* Bottom Left Control Hints */}
       <div
         style={{
           position: 'absolute',
@@ -273,10 +280,19 @@ export function HUD() {
           padding: '6px 12px',
           borderRadius: '4px',
           fontSize: '0.75rem',
-          color: '#64748b'
+          color: '#64748b',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
         }}
       >
-        [WASD] Move &nbsp;|&nbsp; [Click Canvas] Look &nbsp;|&nbsp; [ESC] Unlock Cursor &nbsp;|&nbsp; [E] Tactical Console
+        <span style={{ color: isLocked ? '#10b981' : '#ef4444', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          {isLocked ? <Crosshair size={14} /> : <MousePointer2 size={14} />}
+          {isLocked ? 'CURSOR LOCKED' : 'CURSOR UNLOCKED'}
+        </span>
+        <span style={{ borderLeft: '1px solid #334155', paddingLeft: '12px' }}>
+          [WASD] Move &nbsp;|&nbsp; [Click Canvas] Look &nbsp;|&nbsp; [ESC] Unlock Cursor &nbsp;|&nbsp; [E] Tactical Console
+        </span>
       </div>
 
       {/* Settings Modal */}
