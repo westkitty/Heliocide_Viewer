@@ -1,4 +1,5 @@
 import { StarCollapseShader } from './StarCollapseShader';
+import { StarsilkExtraction } from './StarsilkExtraction';
 import { InhabitedPlanet } from './InhabitedPlanet';
 import { OrbitalInfrastructure } from './OrbitalInfrastructure';
 import { DistantCascadingStars } from './DistantCascadingStars';
@@ -17,6 +18,9 @@ export function CelestialSystem() {
 
       {/* Central Collapsing Star & Accretion Singularity */}
       <StarCollapseShader />
+
+      {/* Canonical Starsilk Ribbons Extracted from Stellar Core */}
+      <StarsilkExtraction />
 
       {/* Relativistic Shockwave & Mass-Ejection Front */}
       <CollapseShockwave />

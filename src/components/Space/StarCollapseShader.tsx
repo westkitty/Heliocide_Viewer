@@ -81,6 +81,8 @@ const StarFragmentShader = `
     return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
   }
 
+  uniform float uExtraction; // 0.0 to 1.0 during Phase C (26s - 52s)
+
   float solarGranulation(vec3 pos, float time) {
     vec3 p = pos * 2.8 + vec3(0.0, time * 0.15, 0.0);
     float n1 = snoise(p);
@@ -96,9 +98,14 @@ const StarFragmentShader = `
     float NdotV = max(0.0, dot(normal, viewDir));
     float rim = 1.0 - NdotV;
 
-    float convSpeed = 0.25 + uCollapseProgress * 3.5;
+    float convSpeed = 0.25 + uCollapseProgress * 3.5 + uExtraction * 1.5;
     float granules = solarGranulation(vPosition * 0.5, uTime * convSpeed);
     float macroFlow = snoise(vPosition * 0.2 + vec3(0.0, uTime * convSpeed * 0.4, 0.0)) * 0.5 + 0.5;
+
+    // Starsilk extraction surface fissures (reality-code tears where ribbons emerge)
+    float fissureNoise = abs(snoise(vPosition * 0.8 + vec3(uTime * 0.8, 0.0, uTime * 0.4)));
+    float fissureMask = smoothstep(0.12, 0.0, fissureNoise) * uExtraction;
+    vec3 starsilkCyan = vec3(0.0, 0.95, 1.0) * (3.0 + granules * 2.0);
 
     float mu = NdotV;
     float eddingtonLimb = clamp(1.0 - 0.65 * (1.0 - mu) - 0.25 * (1.0 - sqrt(max(0.0, mu))), 0.15, 1.0);
@@ -109,6 +116,9 @@ const StarFragmentShader = `
 
     vec3 normalPhotosphere = mix(laneAmber, cellGold, granules);
     normalPhotosphere = mix(normalPhotosphere, deepCore, macroFlow * 0.6 + granules * 0.4) * eddingtonLimb * 1.8;
+    
+    // Inject Starsilk cyan fissures into the photosphere as it is extracted
+    normalPhotosphere = mix(normalPhotosphere, starsilkCyan, fissureMask * 0.85);
 
     vec3 surgeColor = vec3(0.75, 0.88, 1.0) * (2.5 + granules * 1.5);
 
@@ -266,7 +276,8 @@ export function StarCollapseShader() {
     uTime: { value: 0 },
     uCurrentTime: { value: 0 },
     uCollapseProgress: { value: 0 },
-    uLensingIntensity: { value: 0 }
+    uLensingIntensity: { value: 0 },
+    uExtraction: { value: 0 }
   }), []);
 
   const diskUniforms = useMemo(() => ({
@@ -281,6 +292,16 @@ export function StarCollapseShader() {
 
     const currentTime = useTimelineStore.getState().currentTime;
     starUniforms.uCurrentTime.value = currentTime;
+
+    let extraction = 0;
+    if (currentTime < 26.0) {
+      extraction = 0;
+    } else if (currentTime < 52.0) {
+      extraction = (currentTime - 26.0) / 26.0;
+    } else {
+      extraction = 1.0;
+    }
+    starUniforms.uExtraction.value = extraction;
 
     let progress = 0;
     if (currentTime < 52.0) {

@@ -210,18 +210,108 @@ export function CameraManager() {
         camera.rotation.set(0, 0, 0);
       }
     } else if (cameraMode === 'CINEMATIC') {
-      // 5. Authored Cinematic Flight Arc & Damped LookAt
-      const t = Math.min(1.0, (currentTime - 122.0) / 16.0);
-      const radius = THREE.MathUtils.lerp(65, 22, Math.sqrt(t));
-      const angle = currentTime * 0.18;
+      // 5. Fully Authored Phase-Aware Cinematic Camera Director (0s - 138s)
+      const targetPos = _frontVector;
+      const lookTarget = _targetLookAt;
 
-      const targetCamX = Math.cos(angle) * radius;
-      const targetCamY = 16 - t * 28;
-      const targetCamZ = Math.sin(angle) * radius - 45;
+      if (currentTime < 14.0) {
+        // Phase A: Nominal Baseline (0-14s) - Slow panoramic establishing track inside the deck
+        const t = currentTime / 14.0;
+        const smoothT = t * t * (3.0 - 2.0 * t);
+        targetPos.set(
+          THREE.MathUtils.lerp(3.2, -2.4, smoothT),
+          THREE.MathUtils.lerp(2.1, 1.7, smoothT),
+          THREE.MathUtils.lerp(4.0, 1.5, smoothT)
+        );
+        lookTarget.set(
+          THREE.MathUtils.lerp(15.0, -10.0, smoothT),
+          THREE.MathUtils.lerp(-4.0, 0.0, smoothT),
+          -160
+        );
+      } else if (currentTime < 26.0) {
+        // Phase B: Aureal Alert (14-26s) - Dramatic push towards the center observation glass
+        const t = (currentTime - 14.0) / 12.0;
+        const smoothT = t * t * (3.0 - 2.0 * t);
+        targetPos.set(
+          THREE.MathUtils.lerp(-2.4, 0.0, smoothT),
+          THREE.MathUtils.lerp(1.7, 1.5, smoothT),
+          THREE.MathUtils.lerp(1.5, -3.8, smoothT)
+        );
+        lookTarget.set(0, 0, -180);
+      } else if (currentTime < 52.0) {
+        // Phase C: Shard God Authority (26-52s) - Low-angle framing of initial Starsilk extraction
+        const t = (currentTime - 26.0) / 26.0;
+        const angle = t * Math.PI * 0.65;
+        targetPos.set(
+          Math.sin(angle) * 3.5,
+          1.3 + Math.sin(t * Math.PI) * 0.4,
+          -4.5 + Math.cos(angle) * 1.5
+        );
+        lookTarget.set(
+          Math.sin(t * 4.0) * 8.0,
+          2.0 + t * 4.0,
+          -170
+        );
+      } else if (currentTime < 78.0) {
+        // Phase D: Heliocide Collapse (52-78s) - Epic wide-angle pullback tracking massive Starsilk unspooling
+        const t = (currentTime - 52.0) / 26.0;
+        const smoothT = Math.pow(t, 0.8);
+        const shake = Math.sin(currentTime * 40.0) * 0.08 * (1.0 - t * 0.5);
+        targetPos.set(
+          THREE.MathUtils.lerp(0.0, -1.8, smoothT) + shake,
+          THREE.MathUtils.lerp(1.5, 2.2, smoothT) + shake,
+          THREE.MathUtils.lerp(-3.8, 1.0, smoothT)
+        );
+        lookTarget.set(
+          Math.sin(currentTime * 0.3) * 6.0,
+          -t * 3.0,
+          -180
+        );
+      } else if (currentTime < 104.0) {
+        // Phase E: Cluster Cascade & Hull Breach (78-104s) - Dynamic framing near the breach and spiraling silk
+        const t = (currentTime - 78.0) / 26.0;
+        const smoothT = t * t * (3.0 - 2.0 * t);
+        const breachShake = Math.sin(currentTime * 50.0) * 0.12 * Math.sin(t * Math.PI);
+        targetPos.set(
+          THREE.MathUtils.lerp(2.5, 5.5, smoothT) + breachShake,
+          THREE.MathUtils.lerp(1.8, 2.8, smoothT) + breachShake,
+          THREE.MathUtils.lerp(0.0, 3.5, smoothT)
+        );
+        lookTarget.set(
+          THREE.MathUtils.lerp(-10.0, 15.0, smoothT),
+          THREE.MathUtils.lerp(2.0, -4.0, smoothT),
+          -160
+        );
+      } else if (currentTime < 122.0) {
+        // Phase F: Siege Wall Emergence (104-122s) - Exterior sweeping shot tracking tearing station and void horizon
+        const t = (currentTime - 104.0) / 18.0;
+        const smoothT = t * t * (3.0 - 2.0 * t);
+        const orbitRadius = THREE.MathUtils.lerp(18.0, 38.0, smoothT);
+        const orbitAngle = t * Math.PI * 0.75 - 0.5;
+        targetPos.set(
+          Math.sin(orbitAngle) * orbitRadius,
+          THREE.MathUtils.lerp(4.0, 18.0, smoothT),
+          Math.cos(orbitAngle) * orbitRadius - 15.0
+        );
+        lookTarget.set(0, -6.0, -140);
+      } else {
+        // Phase G: Station Loss & Containment (122-138s) - Majestic cosmic orbit around final contained singularity
+        const t = Math.min(1.0, (currentTime - 122.0) / 16.0);
+        const smoothT = t * t * (3.0 - 2.0 * t);
+        const radius = THREE.MathUtils.lerp(42.0, 60.0, smoothT);
+        const angle = currentTime * 0.12;
 
-      camera.position.set(targetCamX, targetCamY, targetCamZ);
-      _targetLookAt.set(0, -t * 22, -100);
-      camera.lookAt(_targetLookAt);
+        targetPos.set(
+          Math.cos(angle) * radius,
+          THREE.MathUtils.lerp(18.0, 8.0, smoothT),
+          Math.sin(angle) * radius - 60.0
+        );
+        lookTarget.set(0, -t * 12.0, -160);
+      }
+
+      // Smoothly damp camera position and orientation to eliminate jitter
+      camera.position.lerp(targetPos, Math.min(1.0, delta * 4.5));
+      camera.lookAt(lookTarget);
     }
   });
 
